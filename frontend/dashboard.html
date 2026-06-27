@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard - Sistema Cosecha</title>
   <style>
     /* ============================================================
-       ESTILOS GLOBALES
+       RESET Y VARIABLES
        ============================================================ */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -24,15 +24,257 @@
       --text: #1a2e28;
       --muted: #5f7570;
       --danger: #c0392b;
+      --success: #27ae60;
+      --warning: #f39c12;
       --radius: 10px;
       --sidebar-w: 240px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ============================================================
+       SIDEBAR
+       ============================================================ */
+    #mainSidebar {
+      width: var(--sidebar-w);
+      background: var(--brand-dark);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 200;
+      transition: transform var(--transition);
+      overflow-y: auto;
+      transform: translateX(0);
+    }
+
+    #mainSidebar.closed {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-brand {
+      padding: 1.4rem 1.2rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-brand .icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.6rem;
+    }
+
+    .sidebar-brand .icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #fff;
+    }
+
+    .sidebar-brand h2 {
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .sidebar-brand p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.72rem;
+      margin-top: 0.1rem;
+    }
+
+    .nav {
+      flex: 1;
+      padding: 0.75rem 0;
+      overflow-y: auto;
+    }
+
+    .nav-label {
+      color: rgba(255,255,255,0.35);
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 0.9rem 1.2rem 0.3rem;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.55rem 1.2rem;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 0.875rem;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+    }
+
+    .nav a.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border-left-color: #5DCAA5;
+    }
+
+    .nav a svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      padding: 0.9rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .sb-avatar {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .user-info .info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-info .name {
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-info .role {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.7rem;
+    }
+
+    .btn-logout {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: rgba(255,255,255,0.45);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+
+    .btn-logout:hover {
+      color: #fff;
+    }
+
+    .btn-logout svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ============================================================
+       OVERLAY
+       ============================================================ */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 150;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .sidebar-overlay.show {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* ============================================================
+       HAMBURGER BUTTONS
+       ============================================================ */
+    .hamburger-global {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 300;
+      background: var(--brand-dark);
+      border: none;
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+
+    .hamburger-global:hover {
+      transform: scale(1.05);
+    }
+
+    .hamburger-global svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .topbar-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      color: var(--text);
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .topbar-hamburger:hover {
+      background: var(--bg);
+    }
+
+    .topbar-hamburger svg {
+      width: 24px;
+      height: 24px;
     }
 
     /* ============================================================
@@ -43,7 +285,7 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: margin-left var(--transition);
     }
 
     /* ============================================================
@@ -53,23 +295,14 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 0 1.75rem;
-      height: 56px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 50;
-    }
-
-    .topbar h1 {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .topbar .date {
-      font-size: 0.8rem;
-      color: var(--muted);
+      box-shadow: var(--shadow);
     }
 
     .topbar-left {
@@ -78,28 +311,26 @@
       gap: 0.75rem;
     }
 
-    .topbar-hamburger {
-      display: none;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-      color: var(--text);
-      align-items: center;
-      justify-content: center;
+    .topbar h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
     }
 
-    .topbar-hamburger svg {
-      width: 22px;
-      height: 22px;
+    .topbar .date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
     }
 
     /* ============================================================
        CONTENT
        ============================================================ */
     .content {
-      padding: 1.75rem;
+      padding: 1.5rem;
       flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     /* ============================================================
@@ -115,11 +346,18 @@
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       padding: 1.25rem;
       display: flex;
       align-items: center;
       gap: 1rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
 
     .stat-icon {
@@ -147,16 +385,6 @@
       color: #854f0b;
     }
 
-    .stat-icon.blue {
-      background: #e6f1fb;
-      color: #185fa5;
-    }
-
-    .stat-icon.purple {
-      background: #eeedfe;
-      color: #534ab7;
-    }
-
     .stat-info .value {
       font-size: 1.6rem;
       font-weight: 700;
@@ -176,9 +404,9 @@
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       overflow: hidden;
-      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
     }
 
     .panel-header {
@@ -187,6 +415,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
     .panel-header h3 {
@@ -206,6 +436,11 @@
     /* ============================================================
        TABLA
        ============================================================ */
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -221,11 +456,17 @@
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
     }
 
     tbody tr {
       border-bottom: 1px solid #f0f2f1;
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover {
+      background: #f8faf9;
     }
 
     tbody tr:last-child {
@@ -234,6 +475,7 @@
 
     tbody td {
       padding: 0.75rem 1rem;
+      vertical-align: middle;
     }
 
     .empty {
@@ -258,11 +500,13 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      transition: background 0.15s;
+      transition: all 0.15s;
+      white-space: nowrap;
     }
 
     .btn-proyectar:hover {
       background: var(--brand-dark);
+      transform: scale(1.02);
     }
 
     .btn-proyectar svg {
@@ -282,8 +526,26 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      min-width: 160px;
-      justify-content: center;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-ver:hover {
+      background: #185fa5;
+      color: #fff;
+    }
+
+    /* ============================================================
+       BADGE DE PROYECCIONES
+       ============================================================ */
+    .badge-proy {
+      background: var(--brand-light);
+      color: var(--brand);
+      padding: 0.15rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     /* ============================================================
@@ -292,12 +554,13 @@
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.5);
       z-index: 1000;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 1rem;
+      animation: fadeIn 0.3s ease;
     }
 
     .overlay.open {
@@ -312,7 +575,19 @@
       max-height: 90vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .modal-header {
@@ -338,6 +613,7 @@
       display: flex;
       align-items: center;
       border-radius: 6px;
+      transition: background 0.15s;
     }
 
     .btn-close:hover {
@@ -406,7 +682,7 @@
 
     .factores-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem;
     }
 
@@ -420,6 +696,7 @@
       cursor: pointer;
       font-size: 0.78rem;
       transition: all 0.15s;
+      user-select: none;
     }
 
     .factor-item:hover {
@@ -501,6 +778,7 @@
       font-weight: 600;
       cursor: pointer;
       color: var(--muted);
+      transition: all 0.15s;
     }
 
     .btn-cancel:hover {
@@ -520,11 +798,12 @@
       display: flex;
       align-items: center;
       gap: 0.4rem;
-      transition: background 0.15s;
+      transition: all 0.15s;
     }
 
     .btn-save:hover:not(:disabled) {
       background: var(--brand-dark);
+      transform: scale(1.02);
     }
 
     .btn-save:disabled {
@@ -588,7 +867,7 @@
       font-weight: 600;
       color: var(--muted);
       text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
     }
 
     .proy-table td {
@@ -608,78 +887,194 @@
     }
 
     /* ============================================================
-       RESPONSIVE
+       RESPONSIVE - MÓVIL
        ============================================================ */
     @media (max-width: 768px) {
+      /* Sidebar */
+      #mainSidebar {
+        transform: translateX(-100%);
+        width: 280px;
+        box-shadow: 2px 0 20px rgba(0,0,0,0.2);
+      }
+
+      #mainSidebar.open {
+        transform: translateX(0);
+      }
+
+      /* Hamburguesa global (visible en móvil) */
+      .hamburger-global {
+        display: flex !important;
+      }
+
+      /* Hamburguesa en topbar (visible en móvil) */
+      .topbar-hamburger {
+        display: flex !important;
+      }
+
+      /* Main */
       .main {
         margin-left: 0 !important;
       }
 
-      .topbar-hamburger {
-        display: flex;
-      }
-
+      /* Topbar */
       .topbar {
         padding: 0 1rem;
         padding-left: 3.5rem !important;
+        height: 56px;
       }
 
-      .content {
-        padding: 1rem;
+      .topbar h1 {
+        font-size: 0.95rem;
       }
 
+      .topbar .date {
+        font-size: 0.7rem;
+      }
+
+      /* Stats */
       .stats {
         grid-template-columns: 1fr 1fr;
         gap: 0.75rem;
       }
 
       .stat-card {
-        padding: 1rem;
+        padding: 0.9rem;
+      }
+
+      .stat-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .stat-icon svg {
+        width: 18px;
+        height: 18px;
       }
 
       .stat-info .value {
         font-size: 1.3rem;
       }
 
-      .panel {
+      .stat-info .label {
+        font-size: 0.7rem;
+      }
+
+      /* Content */
+      .content {
+        padding: 0.75rem;
+      }
+
+      /* Panel */
+      .panel-header {
+        padding: 0.75rem 1rem;
+      }
+
+      .panel-header h3 {
+        font-size: 0.85rem;
+      }
+
+      /* Tabla - scroll horizontal */
+      .table-wrapper {
         overflow-x: auto;
       }
 
       table {
-        min-width: 580px;
+        min-width: 650px;
+        font-size: 0.8rem;
       }
 
-      thead th:nth-child(4),
-      tbody td:nth-child(4),
-      thead th:nth-child(5),
-      tbody td:nth-child(5) {
-        display: none;
+      thead th {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.7rem;
       }
 
-      .btn-ver,
-      .btn-proyectar {
-        padding: 0.3rem 0.5rem;
-        font-size: 0.72rem;
+      tbody td {
+        padding: 0.5rem 0.75rem;
+      }
+
+      /* Ocultar columnas menos importantes en móvil */
+      @media (max-width: 600px) {
+        thead th:nth-child(4),
+        tbody td:nth-child(4),
+        thead th:nth-child(5),
+        tbody td:nth-child(5) {
+          display: none;
+        }
+      }
+
+      /* Botones en móvil */
+      .btn-proyectar,
+      .btn-ver {
+        padding: 0.25rem 0.6rem;
+        font-size: 0.7rem;
         min-width: unset;
       }
 
+      .btn-proyectar svg {
+        width: 11px;
+        height: 11px;
+      }
+
+      /* Modal */
       .modal {
-        border-radius: 12px;
+        max-width: 100%;
         margin: 0.5rem;
+        max-height: 95vh;
+        border-radius: 12px;
       }
 
-      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] {
+      .modal-header {
+        padding: 0.9rem 1rem;
+      }
+
+      .modal-header h2 {
+        font-size: 0.9rem;
+      }
+
+      .modal-body {
+        padding: 1rem;
+      }
+
+      .modal-footer {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+      }
+
+      .modal-footer .btn-cancel,
+      .modal-footer .btn-save {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 0.45rem 0.75rem;
+      }
+
+      /* Resumen boxes */
+      .resumen-box {
         grid-template-columns: 1fr 1fr !important;
+        padding: 0.65rem 0.85rem;
+        gap: 0.3rem;
       }
 
-      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr"] {
-        grid-template-columns: 1fr 1fr !important;
+      .rb-item .rb-label {
+        font-size: 0.65rem;
       }
 
+      .rb-item .rb-value {
+        font-size: 0.8rem;
+      }
+
+      /* Factores */
       .factores-grid {
         grid-template-columns: 1fr 1fr !important;
+        gap: 0.35rem;
       }
 
+      .factor-item {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
+      }
+
+      /* Proyecciones table */
       .proy-table {
         min-width: 480px;
       }
@@ -687,20 +1082,130 @@
       .proy-table-wrap {
         overflow-x: auto;
       }
+
+      .proy-table th,
+      .proy-table td {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.7rem;
+      }
     }
 
     @media (max-width: 420px) {
       .stats {
         grid-template-columns: 1fr;
       }
+
+      .topbar {
+        padding-left: 3rem !important;
+      }
+
+      .topbar-hamburger {
+        padding: 4px;
+      }
+
+      .topbar-hamburger svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .hamburger-global {
+        top: 8px;
+        left: 8px;
+        padding: 6px;
+      }
+
+      .hamburger-global svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    /* ============================================================
+       SCROLLBAR PERSONALIZADA
+       ============================================================ */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--muted);
     }
   </style>
 </head>
 <body>
 
   <!-- ============================================================
-  SIDEBAR (se carga automáticamente con sidebar.js)
+  HAMBURGUESA GLOBAL (visible en móvil)
   ============================================================ -->
+  <button class="hamburger-global" id="hamburgerGlobal" onclick="toggleSidebar()" aria-label="Abrir menú">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- ============================================================
+  SIDEBAR
+  ============================================================ -->
+  <aside id="mainSidebar" class="closed">
+    <div class="sidebar-brand">
+      <div class="icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/>
+        </svg>
+      </div>
+      <h2>Sistema Cosecha</h2>
+      <p>Proyección</p>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Principal</div>
+      <a href="dashboard.html" class="active" onclick="cerrarSidebar()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Inicio
+      </a>
+      <!-- Los enlaces de Admin se cargan dinámicamente -->
+      <div id="adminLinks"></div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="sb-avatar" id="avatarLetter">A</div>
+        <div class="info">
+          <div class="name" id="userName">Usuario</div>
+          <div class="role" id="userRole">Usuario</div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Cerrar sesión">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+  OVERLAY
+  ============================================================ -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="cerrarSidebar()"></div>
 
   <!-- ============================================================
   MAIN CONTENT
@@ -709,7 +1214,7 @@
     <!-- TOPBAR -->
     <div class="topbar">
       <div class="topbar-left">
-        <button class="topbar-hamburger" id="topbarHamburger" onclick="window.toggleSidebar()">
+        <button class="topbar-hamburger" id="topbarHamburger" onclick="toggleSidebar()" aria-label="Abrir menú">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <line x1="3" y1="6" x2="21" y2="6"/>
             <line x1="3" y1="12" x2="21" y2="12"/>
@@ -758,24 +1263,26 @@
           <h3>Cosechas activas</h3>
           <span class="badge-count" id="countActivas">0</span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Laguna</th>
-              <th>Sector</th>
-              <th>Fecha</th>
-              <th>Proyectado (lbs)</th>
-              <th>Peso planta (lb)</th>
-              <th>Proyecciones</th>
-              <th>Tu proyección</th>
-            </tr>
-          </thead>
-          <tbody id="tablaCosechasActivas">
-            <tr>
-              <td colspan="7" class="empty">Cargando...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Laguna</th>
+                <th>Sector</th>
+                <th>Fecha</th>
+                <th>Proyectado (lbs)</th>
+                <th>Peso planta (lb)</th>
+                <th>Proyecciones</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tablaCosechasActivas">
+              <tr>
+                <td colspan="7" class="empty">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -817,15 +1324,15 @@
         <!-- Resumen: Indicadores -->
         <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
           <div class="rb-item">
-            <div class="rb-label">Peso en informe (lb)</div>
+            <div class="rb-label">Peso informe (lb)</div>
             <div class="rb-value" id="mpLbsInforme">—</div>
           </div>
           <div class="rb-item">
-            <div class="rb-label">Peso en planta (lb)</div>
+            <div class="rb-label">Peso planta (lb)</div>
             <div class="rb-value" id="mpPesoPlanta">—</div>
           </div>
           <div class="rb-item">
-            <div class="rb-label">Tamaño de cosecha (g)</div>
+            <div class="rb-label">Tamaño (g)</div>
             <div class="rb-value" id="mpPesoGramo">—</div>
           </div>
           <div class="rb-item">
@@ -833,7 +1340,7 @@
             <div class="rb-value" id="mpHa">—</div>
           </div>
           <div class="rb-item">
-            <div class="rb-label" style="color:var(--brand)">Cam/m² informe</div>
+            <div class="rb-label" style="color:var(--brand)">Cam/m²</div>
             <div class="rb-value" style="color:var(--brand)" id="mpCamM2Informe">—</div>
           </div>
         </div>
@@ -842,7 +1349,7 @@
         <div class="form-group">
           <label>Libras proyectadas *</label>
           <input type="number" id="mpLibras" placeholder="0.00" step="0.01" min="0" oninput="calcularCamM2()">
-          <div style="margin-top:.5rem;background:var(--brand-light);border:1px solid #b2dfd0;border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;">
+          <div style="margin-top:.5rem;background:var(--brand-light);border:1px solid #b2dfd0;border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
             <span style="font-size:.78rem;color:var(--brand);font-weight:600">Cam/m² según tu proyección</span>
             <span style="font-size:1rem;font-weight:700;color:var(--brand)" id="mpCamM2Live">—</span>
           </div>
@@ -865,24 +1372,25 @@
         <!-- Proyecciones registradas -->
         <div class="proy-table-wrap" id="otrasProy" style="display:none">
           <div class="proy-table-title">Proyecciones registradas</div>
-          <table class="proy-table">
-            <thead>
-              <tr>
-                <th>N°</th>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Lbs proyectadas</th>
-                <th>% Variación</th>
-                <th>Parámetros</th>
-                <th>Comentario</th>
-              </tr>
-            </thead>
-            <tbody id="tablaOtrasProy">
-              <tr>
-                <td colspan="7" class="proy-empty">Cargando...</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-wrapper">
+            <table class="proy-table">
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Usuario</th>
+                  <th>Rol</th>
+                  <th>Lbs</th>
+                  <th>% Variación</th>
+                  <th>Parámetros</th>
+                </tr>
+              </thead>
+              <tbody id="tablaOtrasProy">
+                <tr>
+                  <td colspan="6" class="proy-empty">Cargando...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -899,10 +1407,6 @@
   <!-- ============================================================
   SCRIPTS
   ============================================================ -->
-  <!-- Primero el sidebar global -->
-  <script src="sidebar.js"></script>
-
-  <!-- Luego el script de la página -->
   <script>
     // ============================================================
     // CONFIGURACIÓN
@@ -913,6 +1417,99 @@
 
     if (!token || !usuario) {
       window.location.href = 'login.html';
+    }
+
+    // ============================================================
+    // SIDEBAR FUNCTIONS
+    // ============================================================
+    function toggleSidebar() {
+      const sidebar = document.getElementById('mainSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
+      } else {
+        sidebar.classList.toggle('closed');
+      }
+    }
+
+    function cerrarSidebar() {
+      const sidebar = document.getElementById('mainSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      } else {
+        sidebar.classList.add('closed');
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    // ============================================================
+    // INICIALIZAR SIDEBAR
+    // ============================================================
+    function initSidebar() {
+      const sidebar = document.getElementById('mainSidebar');
+      const isMobile = window.innerWidth <= 768;
+      
+      if (isMobile) {
+        sidebar.classList.remove('closed');
+        sidebar.classList.remove('open');
+      } else {
+        sidebar.classList.remove('open');
+        sidebar.classList.add('closed');
+      }
+    }
+
+    // ============================================================
+    // CARGAR ENLACES DE ADMIN
+    // ============================================================
+    function loadAdminLinks() {
+      const container = document.getElementById('adminLinks');
+      const esAdmin = usuario?.rol === 'Admin';
+      const paginaActual = window.location.pathname.split('/').pop() || 'dashboard.html';
+
+      if (!esAdmin) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="nav-label">Administración</div>
+        <a href="cosechas.html" class="${paginaActual === 'cosechas.html' ? 'active' : ''}" onclick="cerrarSidebar()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+          Cosechas
+        </a>
+        <a href="usuarios.html" class="${paginaActual === 'usuarios.html' ? 'active' : ''}" onclick="cerrarSidebar()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          Usuarios
+        </a>
+      `;
+    }
+
+    // ============================================================
+    // ACTUALIZAR DATOS DEL USUARIO
+    // ============================================================
+    function updateUserInfo() {
+      if (usuario) {
+        document.getElementById('avatarLetter').textContent = (usuario.nombre || 'A')[0].toUpperCase();
+        document.getElementById('userName').textContent = usuario.nombre || 'Usuario';
+        document.getElementById('userRole').textContent = usuario.rol || 'Usuario';
+      }
     }
 
     // ============================================================
@@ -977,7 +1574,6 @@
           document.getElementById('statUsuarios').textContent = activos;
         }
       } catch (e) {
-        // Si falla, mostrar guión
         document.getElementById('statUsuarios').textContent = '—';
       }
     }
@@ -1001,14 +1597,13 @@
           return;
         }
 
-        // Guardar en caché
         cosechasActivas = {};
         lista.forEach(c => cosechasActivas[c.id] = c);
 
         tbody.innerHTML = lista.map(c => {
           const yaProyecto = c.ya_proyecte > 0;
           const btnHtml = yaProyecto
-            ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
+            ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver</button>`
             : `<button class="btn-proyectar" onclick="abrirProyeccion(${c.id})">
                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                    <line x1="12" y1="5" x2="12" y2="19"/>
@@ -1023,9 +1618,7 @@
             <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
             <td>${fmt(c.cantidad_proyectada_lbs)}</td>
             <td>${fmt(c.peso_planta_lb)}</td>
-            <td style="text-align:center">
-              <span style="background:var(--brand-light);color:var(--brand);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;font-weight:700">${c.total_proyecciones}</span>
-            </td>
+            <td><span class="badge-proy">${c.total_proyecciones}</span></td>
             <td>${btnHtml}</td>
           </tr>`;
         }).join('');
@@ -1214,7 +1807,7 @@
         const data = await res.json();
 
         if (!data.success || !data.data.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Sin proyecciones aún</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="proy-empty">Sin proyecciones aún</td></tr>';
           return;
         }
 
@@ -1235,10 +1828,16 @@
 
           if (variacion !== null) {
             const abs = Math.abs(variacion);
-            if (abs <= 5) { varColor = '#0f6e56';
-              varBg = '#e1f5ee'; } else if (abs <= 10) { varColor = '#854f0b';
-              varBg = '#faeeda'; } else { varColor = '#c0392b';
-              varBg = '#fdf0ee'; }
+            if (abs <= 5) { 
+              varColor = '#0f6e56';
+              varBg = '#e1f5ee'; 
+            } else if (abs <= 10) { 
+              varColor = '#854f0b';
+              varBg = '#faeeda'; 
+            } else { 
+              varColor = '#c0392b';
+              varBg = '#fdf0ee'; 
+            }
           }
 
           const varStr = variacion !== null ? (variacion > 0 ? '+' : '') + variacion.toFixed(2) + '%' : '—';
@@ -1247,20 +1846,17 @@
           return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
             <td style="color:var(--muted);font-size:.78rem;font-weight:600">${i + 1}</td>
             <td style="font-weight:600">
-              <div style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">
-                ${p.usuario}
-                ${esMasCercano ? '<span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;white-space:nowrap">↑ mayor precisión</span>' : ''}
-              </div>
+              ${p.usuario}
+              ${esMasCercano ? '<span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;white-space:nowrap;margin-left:.3rem;">↑ mejor</span>' : ''}
             </td>
             <td style="color:var(--muted)">${p.rol}</td>
             <td style="font-weight:700;color:var(--brand)">${fmt(p.libras_proyectadas)}</td>
             <td><span style="font-size:.78rem;font-weight:700;color:${varColor};background:${varBg};padding:.2rem .5rem;border-radius:6px;">${varStr}</span></td>
             <td style="font-size:.75rem;color:var(--muted)">${p.parametros || '—'}</td>
-            <td style="font-size:.78rem">${p.comentario || '—'}</td>
           </tr>`;
         }).join('');
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Error al cargar proyecciones</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="proy-empty">Error al cargar proyecciones</td></tr>';
       }
     }
 
@@ -1275,10 +1871,37 @@
     // ============================================================
     // INICIALIZAR
     // ============================================================
-    cargarStats();
-    cargarCosechasActivas();
+    function init() {
+      initSidebar();
+      loadAdminLinks();
+      updateUserInfo();
+      cargarStats();
+      cargarCosechasActivas();
+    }
 
-    // Exponer funciones globalmente
+    // ============================================================
+    // EVENTOS
+    // ============================================================
+    window.addEventListener('resize', initSidebar);
+    document.addEventListener('DOMContentLoaded', init);
+
+    // Cerrar sidebar al hacer clic en el overlay
+    document.getElementById('sidebarOverlay').addEventListener('click', cerrarSidebar);
+
+    // Cerrar sidebar al presionar ESC
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        cerrarSidebar();
+        cerrarModal();
+      }
+    });
+
+    // ============================================================
+    // EXPONER FUNCIONES GLOBALES
+    // ============================================================
+    window.toggleSidebar = toggleSidebar;
+    window.cerrarSidebar = cerrarSidebar;
+    window.logout = logout;
     window.abrirProyeccion = abrirProyeccion;
     window.guardarProyeccion = guardarProyeccion;
     window.cerrarModal = cerrarModal;
@@ -1286,6 +1909,5 @@
 
     console.log('✅ Dashboard cargado correctamente');
   </script>
-
 </body>
 </html>
