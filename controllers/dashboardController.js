@@ -8,8 +8,7 @@ const getStats = async (req, res) => {
       SELECT
         (SELECT COUNT(*) FROM Cosechas  WHERE estado = 'abierta') AS cosechas_activas,
         (SELECT COUNT(*) FROM Lagunas   WHERE activa = 1)         AS lagunas_activas,
-        (SELECT COUNT(*) FROM Usuarios  WHERE activo = 1)         AS usuarios_activos,
-        (SELECT COUNT(*) FROM SolicitudesCambio WHERE estado = 'pendiente') AS solicitudes_pendientes
+        (SELECT COUNT(*) FROM Usuarios  WHERE activo = 1)         AS usuarios_activos
     `);
     return ok(res, result.recordset[0]);
   } catch (err) {

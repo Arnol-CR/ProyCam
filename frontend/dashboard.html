@@ -13,7 +13,8 @@
       --radius:10px; --sidebar-w:240px;
     }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
-    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; }
+    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; transition:transform .25s ease; }
+    .sidebar.collapsed { transform:translateX(-100%); }
     .sidebar-brand { padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,.1); }
     .sidebar-brand .icon { width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem; }
     .sidebar-brand .icon svg { width:20px;height:20px;fill:#fff; }
@@ -34,7 +35,8 @@
     .btn-logout { background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);padding:4px;display:flex;align-items:center; }
     .btn-logout:hover { color:#fff; }
     .btn-logout svg { width:16px;height:16px; }
-    .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column; }
+    .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;transition:margin-left .25s ease; }
+    .main.expanded { margin-left:0; }
     .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
     .topbar h1 { font-size:1rem;font-weight:600; }
     .topbar .date { font-size:.8rem;color:var(--muted); }
@@ -64,7 +66,40 @@
     .btn-proyectar { padding:.35rem .85rem;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;transition:background .15s; }
     .btn-proyectar:hover { background:var(--brand-dark); }
     .btn-proyectar svg { width:13px;height:13px; }
-    .btn-ver { padding:.35rem .85rem;background:none;color:#185fa5;border:1.5px solid #185fa5;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem; }
+    .btn-ver { padding:.35rem .85rem;background:none;color:#185fa5;border:1.5px solid #185fa5;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem; min-width:160px;justify-content:center; }
+
+    /* HAMBURGER / SIDEBAR TOGGLE */
+    .hamburger { display:flex;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center; }
+    .hamburger svg { width:22px;height:22px; }
+    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150; }
+
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%);z-index:200; }
+      .sidebar.open { transform:translateX(0); }
+      .sidebar.collapsed { transform:translateX(-100%) !important; }
+      .main { margin-left:0 !important; }
+      .main.expanded { margin-left:0 !important; }
+      .topbar { padding:0 1rem; }
+      .content { padding:1rem; }
+      .stats { grid-template-columns:1fr 1fr;gap:.75rem; }
+      .stat-card { padding:1rem; }
+      .stat-info .value { font-size:1.3rem; }
+      .panel { overflow-x:auto; }
+      table { min-width:580px; }
+      thead th:nth-child(4), tbody td:nth-child(4),
+      thead th:nth-child(5), tbody td:nth-child(5) { display:none; }
+      .btn-ver, .btn-proyectar { padding:.3rem .5rem;font-size:.72rem;min-width:unset; }
+      .modal { border-radius:12px; }
+      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
+      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
+      .factores-grid { grid-template-columns:1fr 1fr!important; }
+      .proy-table { min-width:480px; }
+      .proy-table-wrap { overflow-x:auto; }
+    }
+    @media (max-width:420px) {
+      .stats { grid-template-columns:1fr; }
+    }
+
     /* MODAL */
     .overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem; }
     .overlay.open { display:flex; }
@@ -109,27 +144,57 @@
     .proy-table td { padding:.6rem .75rem;border-bottom:1px solid #f0f2f1; }
     .proy-table tr:last-child td { border-bottom:none; }
     .proy-empty { text-align:center;color:var(--muted);font-size:.82rem;padding:1rem; }
-  
-    @media (max-width: 768px) {
-      .stats { grid-template-columns: 1fr 1fr; }
-      thead th:nth-child(3),
-      thead th:nth-child(5),
-      tbody td:nth-child(3),
-      tbody td:nth-child(5) { display:none; }
-      table { font-size:.78rem; }
-      tbody td { padding:.6rem .5rem; }
-      .btn-ver, .btn-proyectar { padding:.3rem .5rem;font-size:.72rem;min-width:unset; }
-    }
-
   </style>
 </head>
 <body>
-<script src="sidebar.js"></script>
 
-<div id="sidebar-container"></div>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/></svg>
+    </div>
+    <h2>Sistema Cosecha</h2>
+    <p>Proyección</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Principal</div>
+    <a href="dashboard.html" class="active">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Inicio
+    </a>
+    <a href="cosechas.html" id="linkCosechas">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      Cosechas
+    </a>
+    <div class="nav-label" id="navAdmin">Administración</div>
+    <a href="usuarios.html" id="linkUsuarios">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Usuarios
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar" id="avatarInitial">A</div>
+      <div class="info">
+        <div class="name" id="sidebarNombre"></div>
+        <div class="role" id="sidebarRol"></div>
+      </div>
+      <button class="btn-logout" onclick="logout()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display:none"></div>
+
 <main class="main">
   <div class="topbar">
-    <h1>Dashboard</h1>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <button class="hamburger" id="btnHamburger" onclick="toggleSidebar()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1>Dashboard</h1>
+    </div>
     <span class="date" id="fechaHoy"></span>
   </div>
   <div class="content">
@@ -142,7 +207,7 @@
         <div class="stat-icon amber"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
         <div class="stat-info"><div class="value" id="statUsuarios">—</div><div class="label">Usuarios activos</div></div>
       </div>
-    </div>
+     </div>
 
     <div class="panel">
       <div class="panel-header">
@@ -166,7 +231,6 @@
         </tbody>
       </table>
     </div>
-
   </div>
 </main>
 
@@ -191,10 +255,10 @@
 
       <!-- Fila 2: Indicadores -->
       <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
-        <div class="rb-item"><div class="rb-label">Lbs informe</div><div class="rb-value" id="mpLbsInforme">—</div></div>
-        <div class="rb-item"><div class="rb-label">Peso planta (lb)</div><div class="rb-value" id="mpPesoPlanta">—</div></div>
-        <div class="rb-item"><div class="rb-label">Peso gramo (g)</div><div class="rb-value" id="mpPesoGramo">—</div></div>
-        <div class="rb-item"><div class="rb-label">Hectáreas</div><div class="rb-value" id="mpHa">—</div></div>
+        <div class="rb-item"><div class="rb-label">Peso en informe (lb)</div><div class="rb-value" id="mpLbsInforme">—</div></div>
+        <div class="rb-item"><div class="rb-label">Peso en planta (lb)</div><div class="rb-value" id="mpPesoPlanta">—</div></div>
+        <div class="rb-item"><div class="rb-label">Tamaño de cosecha (g)</div><div class="rb-value" id="mpPesoGramo">—</div></div>
+        <div class="rb-item"><div class="rb-label">Área (Ha)</div><div class="rb-value" id="mpHa">—</div></div>
         <div class="rb-item"><div class="rb-label" style="color:var(--brand)">Cam/m² informe</div><div class="rb-value" style="color:var(--brand)" id="mpCamM2Informe">—</div></div>
       </div>
 
@@ -208,7 +272,7 @@
       </div>
 
       <div class="form-group">
-        <label>Parámetros indicativos <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
+        <label>Parámetros de decisión <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
         <div class="factores-grid" id="factoresGrid">
           <div style="color:var(--muted);font-size:.82rem">Cargando...</div>
         </div>
@@ -222,9 +286,22 @@
       <!-- PROYECCIONES REGISTRADAS -->
       <div class="proy-table-wrap" id="otrasProy" style="display:none">
         <div class="proy-table-title">Proyecciones registradas</div>
-        <div class="proy-cards" id="tablaOtrasProy">
-          <div class="proy-empty">Cargando...</div>
-        </div>
+        <table class="proy-table">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Lbs proyectadas</th>
+              <th>% Variación</th>
+              <th>Parámetros</th>
+              <th>Comentario</th>
+            </tr>
+          </thead>
+          <tbody id="tablaOtrasProy">
+            <tr><td colspan="7" class="proy-empty">Cargando...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="modal-footer">
@@ -244,6 +321,10 @@ const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
 if (!token || !usuario) window.location.href = 'login.html';
 
+document.getElementById('sidebarNombre').textContent = usuario?.nombre || '';
+document.getElementById('sidebarRol').textContent    = usuario?.rol    || '';
+document.getElementById('avatarInitial').textContent = (usuario?.nombre || 'A')[0].toUpperCase();
+
 if (usuario?.rol !== 'Admin') {
   document.getElementById('linkUsuarios')?.remove();
 }
@@ -262,10 +343,33 @@ async function cargarStats() {
     const res  = await fetch(`${API}/dashboard/stats`, { headers: authHeader() });
     const data = await res.json();
     if (data.success) {
-      document.getElementById('statCosechas').textContent    = data.data.cosechas_activas       ?? '0';
-      document.getElementById('statLagunas').textContent     = data.data.lagunas_activas        ?? '0';
-      document.getElementById('statUsuarios').textContent    = data.data.usuarios_activos       ?? '0';
-      document.getElementById('statSolicitudes').textContent = data.data.solicitudes_pendientes ?? '0';
+      const el = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val ?? '0'; };
+      el('statCosechas',    data.data.cosechas_activas);
+      el('statLagunas',     data.data.lagunas_activas);
+      el('statSolicitudes', data.data.solicitudes_pendientes);
+      // Usuarios activos: usar el dato del stats si viene, sino llamada separada
+      if (data.data.usuarios_activos != null) {
+        el('statUsuarios', data.data.usuarios_activos);
+      } else {
+        cargarUsuariosActivos();
+      }
+    } else {
+      cargarUsuariosActivos();
+    }
+  } catch(e) {
+    cargarUsuariosActivos();
+  }
+}
+
+async function cargarUsuariosActivos() {
+  try {
+    const res  = await fetch(`${API}/usuarios`, { headers: authHeader() });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.data)) {
+      // Contar activos (campo activo=1 o true); si no hay campo, cuenta todos
+      const activos = data.data.filter(u => u.activo === 1 || u.activo === true || u.activo == null).length;
+      const el = document.getElementById('statUsuarios');
+      if (el) el.textContent = activos;
     }
   } catch(e) {}
 }
@@ -286,7 +390,7 @@ async function cargarCosechasActivas() {
     window._cosechasActivas = {};
     lista.forEach(c => window._cosechasActivas[c.id] = c);
 
-        tbody.innerHTML = lista.map(c => {
+    tbody.innerHTML = lista.map(c => {
       const yaProyecto = c.ya_proyecte > 0;
       const btnHtml = yaProyecto
         ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
@@ -445,13 +549,13 @@ async function guardarProyeccion() {
 }
 
 async function cargarProyeccionesCosecha(cosechaId) {
-  const container = document.getElementById('tablaOtrasProy');
+  const tbody = document.getElementById('tablaOtrasProy');
   const pp    = cosechaActual ? cosechaActual.peso_planta_lb : null;
   try {
     const res  = await fetch(`${API}/proyecciones/cosecha/${cosechaId}`, { headers: authHeader() });
     const data = await res.json();
     if (!data.success || !data.data.length) {
-      container.innerHTML = '<div class="proy-empty">Sin proyecciones aún</div>';
+      tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Sin proyecciones aún</td></tr>';
       return;
     }
 
@@ -476,9 +580,9 @@ async function cargarProyeccionesCosecha(cosechaId) {
       }
       const varStr = variacion !== null ? (variacion > 0 ? '+' : '') + variacion.toFixed(2) + '%' : '—';
       const esMasCercano = pp && i === 0;
-      return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
+return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
         <td style="color:var(--muted);font-size:.78rem;font-weight:600">${i+1}</td>
-        <td style="font-weight:600">${p.usuario}${esMasCercano ? ' <span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;margin-left:.3rem">↑ más cercano</span>' : ''}</td>
+        <td style="font-weight:600"><div style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">${p.usuario}${esMasCercano ? '<span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;white-space:nowrap">↑ mayor precisión</span>' : ''}</div></td>
         <td style="color:var(--muted)">${p.rol}</td>
         <td style="font-weight:700;color:var(--brand)">${fmt(p.libras_proyectadas)}</td>
         <td><span style="font-size:.78rem;font-weight:700;color:${varColor};background:${varBg};padding:.2rem .5rem;border-radius:6px;">${varStr}</span></td>
@@ -487,9 +591,46 @@ async function cargarProyeccionesCosecha(cosechaId) {
       </tr>`;
     }).join('');
   } catch(e) {
-    container.innerHTML = '<div class="proy-empty">Error al cargar</div>';
+    tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Error al cargar</td></tr>';
   }
 }
+
+// ── Sidebar ──────────────────────────────────────────────
+const _sidebar  = document.querySelector('.sidebar');
+const _main     = document.querySelector('.main');
+const _overlay  = document.getElementById('sidebarOverlay');
+
+function isMobile() { return window.innerWidth <= 768; }
+
+function initSidebar() {
+  if (isMobile()) {
+    _sidebar.style.transform  = 'translateX(-100%)';
+    _sidebar.style.transition = 'transform 0.25s ease';
+    _sidebar.style.zIndex     = '200';
+    _main.style.marginLeft    = '0';
+    _sidebar._mobileOpen = false;
+  } else {
+    _sidebar.style.transform = '';
+    _sidebar.style.zIndex    = '';
+    _main.style.marginLeft   = '';
+    _sidebar._mobileOpen = null;
+  }
+}
+
+function toggleSidebar() {
+  if (isMobile()) {
+    _sidebar._mobileOpen = !_sidebar._mobileOpen;
+    _sidebar.style.transform = _sidebar._mobileOpen ? 'translateX(0)' : 'translateX(-100%)';
+    _overlay.style.display   = _sidebar._mobileOpen ? 'block' : 'none';
+  } else {
+    const collapsed = _sidebar.classList.toggle('collapsed');
+    _main.classList.toggle('expanded', collapsed);
+  }
+}
+
+initSidebar();
+window.addEventListener('resize', initSidebar);
+// ─────────────────────────────────────────────────────────
 
 cargarStats();
 cargarCosechasActivas();
