@@ -109,22 +109,6 @@
     .proy-table td { padding:.6rem .75rem;border-bottom:1px solid #f0f2f1; }
     .proy-table tr:last-child td { border-bottom:none; }
     .proy-empty { text-align:center;color:var(--muted);font-size:.82rem;padding:1rem; }
-
-
-    .proy-cards { display:flex;flex-direction:column;gap:.6rem; }
-.proy-card { background:#f8faf9;border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem; }
-.proy-card.mas-cercano { background:var(--brand-light);border-color:#b2dfd0; }
-.proy-card-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem; }
-.proy-card-user { display:flex;align-items:center;gap:.6rem; }
-.proy-card-avatar { width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;flex-shrink:0; }
-.proy-card.mas-cercano .proy-card-avatar { background:var(--brand-dark); }
-.proy-card-name { font-size:.88rem;font-weight:700;color:var(--text); }
-.proy-card-rol  { font-size:.73rem;color:var(--muted); }
-.proy-card-right { text-align:right; }
-.proy-card-lbs { font-size:1rem;font-weight:700;color:var(--brand); }
-.proy-card-var { display:inline-block;font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;margin-top:.15rem; }
-.proy-card-bottom { font-size:.75rem;color:var(--muted);line-height:1.4;display:flex;flex-direction:column;gap:.2rem;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border); }
-.proy-card-badge-cercano { display:inline-block;font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .4rem;border-radius:10px;margin-left:.4rem;vertical-align:middle; }
   </style>
 </head>
 <body>
@@ -177,6 +161,10 @@
         </tbody>
       </table>
     </div>
+
+    <!-- TARJETAS MÓVIL -->
+    <div class="cosecha-cards" id="cosechaCards"></div>
+
   </div>
 </main>
 
@@ -218,7 +206,7 @@
       </div>
 
       <div class="form-group">
-        <label>Parámetros de decisión <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
+        <label>Parámetros indicativos <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
         <div class="factores-grid" id="factoresGrid">
           <div style="color:var(--muted);font-size:.82rem">Cargando...</div>
         </div>
@@ -254,6 +242,9 @@ const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
 if (!token || !usuario) window.location.href = 'login.html';
 
+document.getElementById('sidebarNombre').textContent = usuario?.nombre || '';
+document.getElementById('sidebarRol').textContent    = usuario?.rol    || '';
+document.getElementById('avatarInitial').textContent = (usuario?.nombre || 'A')[0].toUpperCase();
 
 if (usuario?.rol !== 'Admin') {
   document.getElementById('linkUsuarios')?.remove();
@@ -296,6 +287,39 @@ async function cargarCosechasActivas() {
 
     window._cosechasActivas = {};
     lista.forEach(c => window._cosechasActivas[c.id] = c);
+
+    // Tarjetas móvil
+    const cards = document.getElementById('cosechaCards');
+    if (cards) {
+      cards.innerHTML = lista.map(c => {
+        const yaProyecto = c.ya_proyecte > 0;
+        const btnHtml = yaProyecto
+          ? `<button class="cosecha-card-btn ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
+          : `<button class="cosecha-card-btn" onclick="abrirProyeccion(${c.id})">+ Proyectar</button>`;
+        return `<div class="cosecha-card">
+          <div class="cosecha-card-top">
+            <div>
+              <div class="cosecha-card-laguna">${c.laguna}</div>
+              <div class="cosecha-card-sector">${c.sector}</div>
+            </div>
+            <div class="cosecha-card-fecha">${new Date(c.fecha).toLocaleDateString('es-HN')}</div>
+          </div>
+          <div class="cosecha-card-row">
+            <span class="cosecha-card-label">Proyectado</span>
+            <span class="cosecha-card-value">${fmt(c.cantidad_proyectada_lbs)} lbs</span>
+          </div>
+          <div class="cosecha-card-row">
+            <span class="cosecha-card-label">Peso planta</span>
+            <span class="cosecha-card-value">${fmt(c.peso_planta_lb)} lb</span>
+          </div>
+          <div class="cosecha-card-row">
+            <span class="cosecha-card-label">Proyecciones</span>
+            <span class="cosecha-card-value" style="color:var(--brand)">${c.total_proyecciones}</span>
+          </div>
+          ${btnHtml}
+        </div>`;
+      }).join('');
+    }
 
     tbody.innerHTML = lista.map(c => {
       const yaProyecto = c.ya_proyecte > 0;
@@ -454,9 +478,10 @@ async function guardarProyeccion() {
     btn.disabled = false; btn.classList.remove('loading');
   }
 }
+
 async function cargarProyeccionesCosecha(cosechaId) {
   const container = document.getElementById('tablaOtrasProy');
-  const pp = cosechaActual ? cosechaActual.peso_planta_lb : null;
+  const pp    = cosechaActual ? cosechaActual.peso_planta_lb : null;
   try {
     const res  = await fetch(`${API}/proyecciones/cosecha/${cosechaId}`, { headers: authHeader() });
     const data = await res.json();
@@ -465,6 +490,7 @@ async function cargarProyeccionesCosecha(cosechaId) {
       return;
     }
 
+    // Ordenar por variación absoluta más cercana a 0
     let lista = [...data.data];
     if (pp) {
       lista.sort((a, b) => {
@@ -474,9 +500,9 @@ async function cargarProyeccionesCosecha(cosechaId) {
       });
     }
 
-    container.innerHTML = lista.map((p, i) => {
+    tbody.innerHTML = lista.map((p, i) => {
       const variacion = pp ? ((p.libras_proyectadas - pp) / pp * 100) : null;
-      let varColor = 'var(--muted)', varBg = '#f0f0f0';
+      let varColor = 'var(--muted)', varBg = 'transparent';
       if (variacion !== null) {
         const abs = Math.abs(variacion);
         if (abs <= 5)       { varColor = '#0f6e56'; varBg = '#e1f5ee'; }
@@ -485,28 +511,15 @@ async function cargarProyeccionesCosecha(cosechaId) {
       }
       const varStr = variacion !== null ? (variacion > 0 ? '+' : '') + variacion.toFixed(2) + '%' : '—';
       const esMasCercano = pp && i === 0;
-      return `<div class="proy-card${esMasCercano ? ' mas-cercano' : ''}">
-        <div class="proy-card-top">
-          <div class="proy-card-user">
-            <div class="proy-card-avatar">${p.usuario[0].toUpperCase()}</div>
-            <div>
-              <div class="proy-card-name">
-                ${i+1}. ${p.usuario}
-                ${esMasCercano ? '<span class="proy-card-badge-cercano">↑ más cercano</span>' : ''}
-              </div>
-              <div class="proy-card-rol">${p.rol}</div>
-            </div>
-          </div>
-          <div class="proy-card-right">
-            <div class="proy-card-lbs">${fmt(p.libras_proyectadas)} lbs</div>
-            <span class="proy-card-var" style="color:${varColor};background:${varBg}">${varStr}</span>
-          </div>
-        </div>
-        ${(p.parametros || p.comentario) ? `<div class="proy-card-bottom">
-          ${p.parametros ? `<span>📌 ${p.parametros}</span>` : ''}
-          ${p.comentario ? `<span>💬 ${p.comentario}</span>` : ''}
-        </div>` : ''}
-      </div>`;
+      return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
+        <td style="color:var(--muted);font-size:.78rem;font-weight:600">${i+1}</td>
+        <td style="font-weight:600">${p.usuario}${esMasCercano ? ' <span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;margin-left:.3rem">↑ más cercano</span>' : ''}</td>
+        <td style="color:var(--muted)">${p.rol}</td>
+        <td style="font-weight:700;color:var(--brand)">${fmt(p.libras_proyectadas)}</td>
+        <td><span style="font-size:.78rem;font-weight:700;color:${varColor};background:${varBg};padding:.2rem .5rem;border-radius:6px;">${varStr}</span></td>
+        <td style="font-size:.75rem;color:var(--muted)">${p.parametros || '—'}</td>
+        <td style="font-size:.78rem">${p.comentario || '—'}</td>
+      </tr>`;
     }).join('');
   } catch(e) {
     container.innerHTML = '<div class="proy-empty">Error al cargar</div>';
