@@ -19,11 +19,17 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
 app.use('/api/auth',        require('./routes/authRoutes'));
 app.use('/api/dashboard',   require('./routes/dashboardRoutes'));
 app.use('/api/cosechas',    require('./routes/cosechaRoutes'));
 app.use('/api/sectores',   require('./routes/sectorRoutes'));
 app.use('/api/lagunas',     require('./routes/lagunaRoutes'));
+app.use('/api/proyecciones', require('./routes/proyeccionRoutes'));
+app.use('/api/usuarios',    require('./routes/usuarioRoutes'));
 app.use('/api/solicitudes', require('./routes/solicitudRoutes'));
 
 app.get('/api/health', async (req, res) => {

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:#0f6e56; --brand-dark:#085041; --brand-light:#e1f5ee;
+      --bg:#f0f2f1; --surface:#fff; --border:#dde2e0;
+      --text:#1a2e28; --muted:#5f7570; --danger:#c0392b;
+      --radius:10px; --sidebar-w:240px;
+    }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; }
+    .sidebar-brand { padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,.1); }
+    .sidebar-brand .icon { width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem; }
+    .sidebar-brand .icon svg { width:20px;height:20px;fill:#fff; }
+    .sidebar-brand h2 { color:#fff;font-size:.95rem;font-weight:700; }
+    .sidebar-brand p  { color:rgba(255,255,255,.5);font-size:.72rem;margin-top:.1rem; }
+    .nav { flex:1;padding:.75rem 0;overflow-y:auto; }
+    .nav-label { color:rgba(255,255,255,.35);font-size:.67rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.9rem 1.2rem .3rem; }
+    .nav a { display:flex;align-items:center;gap:.65rem;padding:.55rem 1.2rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:background .15s,color .15s; }
+    .nav a:hover { background:rgba(255,255,255,.07);color:#fff; }
+    .nav a.active { background:rgba(255,255,255,.12);color:#fff;border-left-color:#5DCAA5; }
+    .nav a svg { width:18px;height:18px;flex-shrink:0; }
+    .sidebar-footer { padding:.9rem 1.2rem;border-top:1px solid rgba(255,255,255,.1); }
+    .user-info { display:flex;align-items:center;gap:.6rem; }
+    .avatar { width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;font-weight:700;flex-shrink:0; }
+    .user-info .info { flex:1;min-width:0; }
+    .user-info .name { color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .user-info .role { color:rgba(255,255,255,.45);font-size:.7rem; }
+    .btn-logout { background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);padding:4px;display:flex;align-items:center; }
+    .btn-logout:hover { color:#fff; }
+    .btn-logout svg { width:16px;height:16px; }
+    .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column; }
+    .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
+    .topbar h1 { font-size:1rem;font-weight:600; }
+    .btn-primary { padding:.5rem 1rem;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-size:.85rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;transition:background .15s; }
+    .btn-primary:hover { background:var(--brand-dark); }
+    .btn-primary svg { width:16px;height:16px; }
+    .content { padding:1.75rem; }
+    .panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%;border-collapse:collapse;font-size:.85rem; }
+    thead th { background:#f8faf9;padding:.65rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border); }
+    tbody tr { border-bottom:1px solid #f0f2f1;transition:background .1s;cursor:pointer; }
+    tbody tr:hover { background:#f8faf9; }
+    tbody td { padding:.75rem 1rem; }
+    tbody tr:last-child { border-bottom:none; }
+    .badge-rol { display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#e6f1fb;color:#185fa5; }
+    .badge-activo { display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#e1f5ee;color:#0f6e56; }
+    .badge-inactivo { display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fdf0ee;color:#c0392b; }
+    .empty { padding:3rem;text-align:center;color:var(--muted);font-size:.85rem; }
+
+    /* PANEL LATERAL */
+    .edit-panel { position:fixed;top:0;right:-440px;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:300;display:flex;flex-direction:column;transition:right .28s cubic-bezier(.4,0,.2,1); }
+    .edit-panel.open { right:0; }
+    .ep-header { padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+    .ep-header h3 { font-size:.95rem;font-weight:700; }
+    .ep-body { flex:1;overflow-y:auto;padding:1.5rem; }
+    .ep-footer { padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.75rem;justify-content:flex-end; }
+    .ep-section { margin-bottom:1.1rem; }
+    .ep-section label { display:block;font-size:.8rem;font-weight:600;margin-bottom:.35rem; }
+    .ep-section input, .ep-section select { width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.9rem;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;font-family:inherit; }
+    .ep-section input:focus, .ep-section select:focus { border-color:var(--brand); }
+    .field-hint { font-size:.72rem;color:var(--muted);margin-top:.25rem; }
+    .toggle-wrap { display:flex;align-items:center;gap:.75rem;margin-top:.25rem; }
+    .toggle { position:relative;width:40px;height:22px;flex-shrink:0; }
+    .toggle input { opacity:0;width:0;height:0; }
+    .toggle-slider { position:absolute;inset:0;background:#ccc;border-radius:22px;cursor:pointer;transition:.2s; }
+    .toggle input:checked + .toggle-slider { background:var(--brand); }
+    .toggle-slider::before { content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s; }
+    .toggle input:checked + .toggle-slider::before { transform:translateX(18px); }
+    .alert-ep { background:#fdf0ee;border:1px solid #f5c6c0;border-radius:var(--radius);color:var(--danger);font-size:.82rem;padding:.6rem .85rem;margin-bottom:1rem;display:none; }
+    .alert-ep.show { display:block; }
+    .overlay-dim { position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:299;display:none; }
+    .overlay-dim.show { display:block; }
+    .btn-close { background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;border-radius:6px; }
+    .btn-close:hover { background:var(--bg); }
+    .btn-close svg { width:20px;height:20px; }
+    .btn-cancel { padding:.55rem 1rem;background:none;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;color:var(--muted); }
+    .btn-cancel:hover { border-color:var(--text);color:var(--text); }
+    .btn-save { padding:.55rem 1.25rem;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .15s; }
+    .btn-save:hover:not(:disabled) { background:var(--brand-dark); }
+    .btn-save:disabled { opacity:.55;cursor:not-allowed; }
+    .spinner { width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none; }
+    .btn-save.loading .spinner { display:block; }
+    .btn-save.loading .save-text { display:none; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .avatar-big { width:48px;height:48px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--brand);font-size:1.1rem;font-weight:700;flex-shrink:0; }
+    .user-row { display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border); }
+    .user-row .info .name { font-size:.95rem;font-weight:700; }
+    .user-row .info .meta { font-size:.78rem;color:var(--muted);margin-top:.1rem; }
+    .sep { border:none;border-top:1px solid var(--border);margin:1rem 0; }
+  </style>
+</head>
+<body>
+<script src="sidebar.js"></script>
+
+<div id="sidebar-container"></div>
+<main class="main">
+  <div class="topbar">
+    <h1>Usuarios</h1>
+    <button class="btn-primary" onclick="abrirNuevo()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo usuario
+    </button>
+  </div>
+  <div class="content">
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Sectores</th>
+              <th>Estado</th>
+              <th>Creado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaUsuarios">
+            <tr><td colspan="7" class="empty">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- DIM -->
+<div class="overlay-dim" id="dimOverlay" onclick="cerrarPanel()"></div>
+
+<!-- PANEL LATERAL -->
+<div class="edit-panel" id="editPanel">
+  <div class="ep-header">
+    <h3 id="epTitulo">Nuevo usuario</h3>
+    <button class="btn-close" onclick="cerrarPanel()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="ep-body">
+    <div class="alert-ep" id="alertEp"></div>
+
+    <div id="userRowWrap" style="display:none">
+      <div class="user-row">
+        <div class="avatar-big" id="epAvatar">A</div>
+        <div class="info">
+          <div class="name" id="epNombreDisplay"></div>
+          <div class="meta" id="epMetaDisplay"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ep-section">
+      <label>Nombre completo *</label>
+      <input type="text" id="epNombre" placeholder="Ej. Juan Pérez">
+    </div>
+    <div class="ep-section">
+      <label>Correo electrónico *</label>
+      <input type="email" id="epEmail" placeholder="usuario@empresa.com">
+    </div>
+    <div class="ep-section">
+      <label id="epPassLabel">Contraseña *</label>
+      <input type="password" id="epPassword" placeholder="Mínimo 6 caracteres">
+      <div class="field-hint" id="epPassHint"></div>
+    </div>
+
+    <hr class="sep">
+
+    <div class="ep-section">
+      <label>Rol *</label>
+      <select id="epRol">
+        <option value="">Selecciona un rol...</option>
+      </select>
+    </div>
+    <div class="ep-section">
+      <label>Sectores asignados</label>
+      <div id="sectoresCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.25rem;"></div>
+      <div class="field-hint">Sin selección = acceso global</div>
+    </div>
+
+    <div class="ep-section" id="epActivoWrap" style="display:none">
+      <label>Estado</label>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="epActivo" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="epActivoLabel" style="font-size:.85rem;color:var(--text)">Activo</span>
+      </div>
+    </div>
+  </div>
+  <div class="ep-footer">
+    <button class="btn-cancel" onclick="cerrarPanel()">Cancelar</button>
+    <button class="btn-save" id="btnGuardar" onclick="guardar()">
+      <span class="save-text">Guardar</span>
+      <span class="spinner"></span>
+    </button>
+  </div>
+</div>
+
+<script>
+const API     = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+const token   = window._token;
+const usuario = window._usuario;
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+// Toggle activo label
+document.getElementById('epActivo').addEventListener('change', function() {
+  document.getElementById('epActivoLabel').textContent = this.checked ? 'Activo' : 'Inactivo';
+});
+
+let roles = [], sectores = [], usuarioEditando = null;
+
+function updateSectorLabel(lbl) {
+  if (!lbl) return;
+  const cb = lbl.querySelector('input');
+  if (cb.checked) {
+    lbl.style.borderColor = 'var(--brand)';
+    lbl.style.background  = 'var(--brand-light)';
+    lbl.style.color       = 'var(--brand)';
+    lbl.style.fontWeight  = '600';
+  } else {
+    lbl.style.borderColor = 'var(--border)';
+    lbl.style.background  = '';
+    lbl.style.color       = '';
+    lbl.style.fontWeight  = '';
+  }
+}
+
+function toggleSecLabel(id) {
+  updateSectorLabel(document.getElementById('lbl_sec_' + id));
+}
+
+async function cargarCatalogos() {
+  if (roles.length && sectores.length) return;
+  const [rRes, sRes] = await Promise.all([
+    fetch(`${API}/proyecciones/factores`, { headers: authHeader() }).then(r => r.json()).catch(() => ({ success: false })),
+    fetch(`${API}/sectores`, { headers: authHeader() }).then(r => r.json()).catch(() => ({ success: false })),
+  ]);
+  // Roles desde endpoint dedicado
+  const rolesRes = await fetch(`${API}/usuarios/roles`, { headers: authHeader() }).then(r => r.json()).catch(() => ({ success: false }));
+  roles   = rolesRes.success ? rolesRes.data : [];
+  sectores= sRes.success     ? sRes.data    : [];
+
+  const selRol = document.getElementById('epRol');
+  selRol.innerHTML = '<option value="">Selecciona un rol...</option>' +
+    roles.map(r => `<option value="${r.id}">${r.nombre}</option>`).join('');
+
+  const grid = document.getElementById('sectoresCheckboxes');
+  grid.innerHTML = sectores.map(s => `
+    <label style="display:flex;align-items:center;gap:.4rem;padding:.35rem .5rem;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;font-size:.82rem;transition:all .15s" id="lbl_sec_${s.id}">
+      <input type="checkbox" value="${s.id}" style="accent-color:var(--brand)" onchange="toggleSecLabel(${s.id})">
+      ${s.nombre}
+    </label>
+  `).join('');
+}
+
+async function cargarUsuarios() {
+  try {
+    const res  = await fetch(`${API}/usuarios`, { headers: authHeader() });
+    const data = await res.json();
+    const lista = data.success ? data.data : [];
+    const tbody = document.getElementById('tablaUsuarios');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin usuarios registrados</td></tr>';
+      return;
+    }
+    window._usuariosData = {};
+    lista.forEach(u => window._usuariosData[u.id] = u);
+    tbody.innerHTML = lista.map(u => `
+      <tr onclick="abrirEdicion(window._usuariosData[${u.id}])">
+      <td style="color:var(--muted);font-size:.78rem">${lista.indexOf(u)+1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:.6rem">
+            <div style="width:30px;height:30px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--brand);font-size:.78rem;font-weight:700;flex-shrink:0">${u.nombre[0].toUpperCase()}</div>
+            <span style="font-weight:600">${u.nombre}</span>
+          </div>
+        </td>
+        <td style="color:var(--muted)">${u.email}</td>
+        <td><span class="badge-rol">${u.rol}</span></td>
+        <td style="font-size:.82rem">${u.sectores || '<span style="color:var(--muted);font-size:.8rem">Global</span>'}</td>
+        <td><span class="${u.activo ? 'badge-activo' : 'badge-inactivo'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
+        <td style="color:var(--muted);font-size:.8rem">${new Date(u.created_at).toLocaleDateString('es-HN')}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    document.getElementById('tablaUsuarios').innerHTML = '<tr><td colspan="7" class="empty">Error al cargar</td></tr>';
+  }
+}
+
+async function abrirNuevo() {
+  usuarioEditando = null;
+  document.getElementById('epTitulo').textContent  = 'Nuevo usuario';
+  document.getElementById('epNombre').value        = '';
+  document.getElementById('epEmail').value         = '';
+  document.getElementById('epPassword').value      = '';
+  document.getElementById('epRol').value           = '';
+  document.querySelectorAll('#sectoresCheckboxes input[type=checkbox]').forEach(cb => { cb.checked = false; updateSectorLabel(cb.closest('label')); });
+  document.getElementById('epActivo').checked      = true;
+  document.getElementById('epPassLabel').textContent = 'Contraseña *';
+  document.getElementById('epPassHint').textContent  = '';
+  document.getElementById('userRowWrap').style.display  = 'none';
+  document.getElementById('epActivoWrap').style.display = 'none';
+  document.getElementById('alertEp').classList.remove('show');
+  await cargarCatalogos();
+  document.getElementById('editPanel').classList.add('open');
+}
+
+async function abrirEdicion(u) {
+  usuarioEditando = u;
+  document.getElementById('epTitulo').textContent      = 'Editar usuario';
+  document.getElementById('epAvatar').textContent      = u.nombre[0].toUpperCase();
+  document.getElementById('epNombreDisplay').textContent = u.nombre;
+  document.getElementById('epMetaDisplay').textContent   = `${u.rol}${u.sector ? ' · ' + u.sector : ''}`;
+  document.getElementById('userRowWrap').style.display   = 'flex';
+  document.getElementById('epNombre').value   = u.nombre;
+  document.getElementById('epEmail').value    = u.email;
+  document.getElementById('epPassword').value = '';
+  document.getElementById('epPassLabel').textContent = 'Nueva contraseña';
+  document.getElementById('epPassHint').textContent  = 'Deja vacío para no cambiarla';
+  document.getElementById('epActivo').checked = !!u.activo;
+  document.getElementById('epActivoLabel').textContent = u.activo ? 'Activo' : 'Inactivo';
+  document.getElementById('epActivoWrap').style.display = 'block';
+  document.getElementById('alertEp').classList.remove('show');
+  await cargarCatalogos();
+  document.getElementById('epRol').value = u.rol_id || '';
+  const sids = u.sector_ids ? u.sector_ids.split(',').map(s => s.trim()) : [];
+  document.querySelectorAll('#sectoresCheckboxes input[type=checkbox]').forEach(cb => {
+    cb.checked = sids.includes(cb.value);
+    updateSectorLabel(cb.closest('label'));
+  });
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('dimOverlay').classList.add('show');
+}
+
+function cerrarPanel() {
+  document.getElementById('editPanel').classList.remove('open');
+  document.getElementById('dimOverlay').classList.remove('show');
+  usuarioEditando = null;
+}
+
+async function guardar() {
+  const nombre   = document.getElementById('epNombre').value.trim();
+  const email    = document.getElementById('epEmail').value.trim();
+  const password = document.getElementById('epPassword').value;
+  const rol_id   = parseInt(document.getElementById('epRol').value)    || null;
+
+  const activo   = document.getElementById('epActivo').checked ? 1 : 0;
+  const alertEl  = document.getElementById('alertEp');
+  alertEl.classList.remove('show');
+
+  if (!nombre || !email || !rol_id) {
+    alertEl.textContent = 'Nombre, email y rol son requeridos.';
+    alertEl.classList.add('show');
+    return;
+  }
+  if (!usuarioEditando && !password) {
+    alertEl.textContent = 'La contraseña es requerida para nuevos usuarios.';
+    alertEl.classList.add('show');
+    return;
+  }
+  if (password && password.length < 6) {
+    alertEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    alertEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('btnGuardar');
+  btn.disabled = true; btn.classList.add('loading');
+
+  const sector_ids = [...document.querySelectorAll('#sectoresCheckboxes input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
+  const body = { nombre, email, rol_id, sector_ids, activo };
+  if (password) body.password = password;
+
+  try {
+    const url    = usuarioEditando ? `${API}/usuarios/${usuarioEditando.id}` : `${API}/usuarios`;
+    const method = usuarioEditando ? 'PATCH' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeader(), body: JSON.stringify(body) });
+    const data   = await res.json();
+    if (!res.ok || !data.success) {
+      alertEl.textContent = data.message || 'Error al guardar.';
+      alertEl.classList.add('show');
+      return;
+    }
+    cerrarPanel();
+    cargarUsuarios();
+  } catch(e) {
+    alertEl.textContent = 'Error de conexión.';
+    alertEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+}
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' };
+}
+
+cargarUsuarios();
+</script>
+<script src="sidebar.js"></script>
+</body>
+</html>

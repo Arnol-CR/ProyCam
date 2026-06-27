@@ -6,515 +6,516 @@
   <title>Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --brand:       #0f6e56;
-      --brand-dark:  #085041;
-      --brand-light: #e1f5ee;
-      --bg:          #f0f2f1;
-      --surface:     #ffffff;
-      --border:      #dde2e0;
-      --text:        #1a2e28;
-      --muted:       #5f7570;
-      --radius:      10px;
-      --sidebar-w:   240px;
+      --brand:#0f6e56; --brand-dark:#085041; --brand-light:#e1f5ee;
+      --bg:#f0f2f1; --surface:#fff; --border:#dde2e0;
+      --text:#1a2e28; --muted:#5f7570; --danger:#c0392b;
+      --radius:10px; --sidebar-w:240px;
     }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; }
+    .sidebar-brand { padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,.1); }
+    .sidebar-brand .icon { width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem; }
+    .sidebar-brand .icon svg { width:20px;height:20px;fill:#fff; }
+    .sidebar-brand h2 { color:#fff;font-size:.95rem;font-weight:700; }
+    .sidebar-brand p  { color:rgba(255,255,255,.5);font-size:.72rem;margin-top:.1rem; }
+    .nav { flex:1;padding:.75rem 0;overflow-y:auto; }
+    .nav-label { color:rgba(255,255,255,.35);font-size:.67rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.9rem 1.2rem .3rem; }
+    .nav a { display:flex;align-items:center;gap:.65rem;padding:.55rem 1.2rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:background .15s,color .15s; }
+    .nav a:hover { background:rgba(255,255,255,.07);color:#fff; }
+    .nav a.active { background:rgba(255,255,255,.12);color:#fff;border-left-color:#5DCAA5; }
+    .nav a svg { width:18px;height:18px;flex-shrink:0; }
+    .sidebar-footer { padding:.9rem 1.2rem;border-top:1px solid rgba(255,255,255,.1); }
+    .user-info { display:flex;align-items:center;gap:.6rem; }
+    .avatar { width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;font-weight:700;flex-shrink:0; }
+    .user-info .info { flex:1;min-width:0; }
+    .user-info .name { color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .user-info .role { color:rgba(255,255,255,.45);font-size:.7rem; }
+    .btn-logout { background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);padding:4px;display:flex;align-items:center; }
+    .btn-logout:hover { color:#fff; }
+    .btn-logout svg { width:16px;height:16px; }
+    .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column; }
+    .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
+    .topbar h1 { font-size:1rem;font-weight:600; }
+    .topbar .date { font-size:.8rem;color:var(--muted); }
+    .content { padding:1.75rem;flex:1; }
+    .stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.75rem; }
+    .stat-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;display:flex;align-items:center;gap:1rem; }
+    .stat-icon { width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .stat-icon svg { width:22px;height:22px; }
+    .stat-icon.green  { background:#e1f5ee;color:#0f6e56; }
+    .stat-icon.blue   { background:#e6f1fb;color:#185fa5; }
+    .stat-icon.amber  { background:#faeeda;color:#854f0b; }
+    .stat-icon.purple { background:#eeedfe;color:#534ab7; }
+    .stat-info .value { font-size:1.6rem;font-weight:700;color:var(--text);line-height:1; }
+    .stat-info .label { font-size:.78rem;color:var(--muted);margin-top:.25rem; }
+    .panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem; }
+    .panel-header { padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+    .panel-header h3 { font-size:.9rem;font-weight:600; }
+    .panel-header .badge-count { background:var(--brand-light);color:var(--brand);font-size:.75rem;font-weight:700;padding:.2rem .55rem;border-radius:20px; }
+    table { width:100%;border-collapse:collapse;font-size:.85rem; }
+    thead th { background:#f8faf9;padding:.65rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border); }
+    tbody tr { border-bottom:1px solid #f0f2f1; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:.75rem 1rem; }
+    .empty { padding:2.5rem;text-align:center;color:var(--muted);font-size:.85rem; }
+    .badge { display:inline-block;padding:.2rem .55rem;border-radius:20px;font-size:.72rem;font-weight:600; }
+    .badge.abierta { background:#e1f5ee;color:#0f6e56; }
+    .btn-proyectar { padding:.35rem .85rem;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;transition:background .15s; }
+    .btn-proyectar:hover { background:var(--brand-dark); }
+    .btn-proyectar svg { width:13px;height:13px; }
+    .btn-ver { padding:.35rem .85rem;background:none;color:#185fa5;border:1.5px solid #185fa5;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem; }
+    /* MODAL */
+    .overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem; }
+    .overlay.open { display:flex; }
+    .modal { background:var(--surface);border-radius:16px;width:100%;max-width:780px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .modal-header { padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
+    .modal-header h2 { font-size:1rem;font-weight:700; }
+    .btn-close { background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;border-radius:6px; }
+    .btn-close:hover { background:var(--bg); }
+    .btn-close svg { width:20px;height:20px; }
+    .modal-body { padding:1.5rem;overflow-y:auto;flex:1; }
+    .modal-footer { padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem;background:var(--surface);border-radius:0 0 16px 16px;flex-shrink:0; }
+    .form-group { margin-bottom:1.1rem; }
+    label { display:block;font-size:.8rem;font-weight:600;margin-bottom:.35rem; }
+    input[type=number], textarea { width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.9rem;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;font-family:inherit; }
+    input[type=number]:focus, textarea:focus { border-color:var(--brand); }
+    textarea { resize:vertical;min-height:70px; }
+    .factores-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem; }
+    .factor-item { display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:.78rem;transition:all .15s; }
+    .factor-item:hover { border-color:var(--brand);background:var(--brand-light); }
+    .factor-item.checked { border-color:var(--brand);background:var(--brand-light);color:var(--brand);font-weight:600; }
+    .factor-check { width:16px;height:16px;border:2px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .factor-item.checked .factor-check { background:var(--brand);border-color:var(--brand); }
+    .factor-item.checked .factor-check::after { content:'✓';color:#fff;font-size:.65rem; }
+    .resumen-box { background:#f8faf9;border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.75rem;display:grid;gap:.5rem; }
+    .rb-item .rb-label { font-size:.7rem;color:var(--muted); }
+    .rb-item .rb-value { font-size:.9rem;font-weight:700;color:var(--text); }
+    .alert-modal { background:#fdf0ee;border:1px solid #f5c6c0;border-radius:var(--radius);color:var(--danger);font-size:.82rem;padding:.6rem .85rem;margin-bottom:1rem;display:none; }
+    .alert-modal.show { display:block; }
+    .btn-cancel { padding:.55rem 1rem;background:none;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;color:var(--muted); }
+    .btn-cancel:hover { border-color:var(--text);color:var(--text); }
+    .btn-save { padding:.55rem 1.25rem;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .15s; }
+    .btn-save:hover:not(:disabled) { background:var(--brand-dark); }
+    .btn-save:disabled { opacity:.55;cursor:not-allowed; }
+    .spinner { width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none; }
+    .btn-save.loading .spinner { display:block; }
+    .btn-save.loading .save-text { display:none; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .proy-table-wrap { margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem; }
+    .proy-table-title { font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem; }
+    .proy-table { width:100%;border-collapse:collapse;font-size:.82rem; }
+    .proy-table th { background:#f8faf9;padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border); }
+    .proy-table td { padding:.6rem .75rem;border-bottom:1px solid #f0f2f1; }
+    .proy-table tr:last-child td { border-bottom:none; }
+    .proy-empty { text-align:center;color:var(--muted);font-size:.82rem;padding:1rem; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      min-height: 100vh;
-    }
 
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      background: var(--brand-dark);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; left: 0;
-      height: 100vh;
-      z-index: 100;
-    }
-
-    .sidebar-brand {
-      padding: 1.4rem 1.2rem 1rem;
-      border-bottom: 1px solid rgba(255,255,255,.1);
-    }
-
-    .sidebar-brand .icon {
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,.15);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: .6rem;
-    }
-
-    .sidebar-brand .icon svg { width: 20px; height: 20px; fill: #fff; }
-    .sidebar-brand h2 { color: #fff; font-size: .95rem; font-weight: 700; }
-    .sidebar-brand p  { color: rgba(255,255,255,.5); font-size: .72rem; margin-top: .1rem; }
-
-    .nav { flex: 1; padding: .75rem 0; overflow-y: auto; }
-
-    .nav-label {
-      color: rgba(255,255,255,.35);
-      font-size: .67rem;
-      font-weight: 700;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      padding: .9rem 1.2rem .3rem;
-    }
-
-    .nav a {
-      display: flex;
-      align-items: center;
-      gap: .65rem;
-      padding: .55rem 1.2rem;
-      color: rgba(255,255,255,.7);
-      text-decoration: none;
-      font-size: .875rem;
-      border-left: 3px solid transparent;
-      transition: background .15s, color .15s;
-    }
-
-    .nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
-    .nav a.active { background: rgba(255,255,255,.12); color: #fff; border-left-color: #5DCAA5; }
-    .nav a svg { width: 18px; height: 18px; flex-shrink: 0; }
-
-    .sidebar-footer {
-      padding: .9rem 1.2rem;
-      border-top: 1px solid rgba(255,255,255,.1);
-    }
-
-    .user-info {
-      display: flex; align-items: center; gap: .6rem;
-    }
-
-    .avatar {
-      width: 32px; height: 32px;
-      background: rgba(255,255,255,.2);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: .8rem; font-weight: 700; flex-shrink: 0;
-    }
-
-    .user-info .info { flex: 1; min-width: 0; }
-    .user-info .name { color: #fff; font-size: .8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-info .role { color: rgba(255,255,255,.45); font-size: .7rem; }
-
-    .btn-logout {
-      background: none; border: none; cursor: pointer;
-      color: rgba(255,255,255,.45); padding: 4px;
-      display: flex; align-items: center;
-    }
-    .btn-logout:hover { color: #fff; }
-    .btn-logout svg { width: 16px; height: 16px; }
-
-    /* ── MAIN ── */
-    .main {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 1.75rem;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 50;
-    }
-
-    .topbar h1 { font-size: 1rem; font-weight: 600; color: var(--text); }
-    .topbar .date { font-size: .8rem; color: var(--muted); }
-
-    .content { padding: 1.75rem; flex: 1; }
-
-    /* ── CARDS RESUMEN ── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.75rem;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .stat-icon {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .stat-icon svg { width: 22px; height: 22px; }
-    .stat-icon.green  { background: #e1f5ee; color: #0f6e56; }
-    .stat-icon.blue   { background: #e6f1fb; color: #185fa5; }
-    .stat-icon.amber  { background: #faeeda; color: #854f0b; }
-    .stat-icon.purple { background: #eeedfe; color: #534ab7; }
-
-    .stat-info .value { font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1; }
-    .stat-info .label { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
-
-    /* ── SECCIÓN 2 COLS ── */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .panel-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-
-    .panel-header h3 { font-size: .9rem; font-weight: 600; }
-
-    .btn-sm {
-      padding: .35rem .75rem;
-      background: var(--brand);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: .78rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex; align-items: center; gap: .3rem;
-    }
-
-    .btn-sm:hover { background: var(--brand-dark); }
-
-    /* ── TABLA ── */
-    .table-wrap { overflow-x: auto; }
-
-    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-    thead th {
-      background: #f8faf9;
-      padding: .6rem 1rem;
-      text-align: left;
-      font-size: .75rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .4px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    tbody tr { border-bottom: 1px solid #f0f2f1; transition: background .1s; }
-    tbody tr:hover { background: #f8faf9; }
-    tbody td { padding: .7rem 1rem; color: var(--text); }
-    tbody tr:last-child { border-bottom: none; }
-
-    .badge {
-      display: inline-block;
-      padding: .2rem .55rem;
-      border-radius: 20px;
-      font-size: .72rem;
-      font-weight: 600;
-    }
-
-    .badge.abierta  { background: #e1f5ee; color: #0f6e56; }
-    .badge.cerrada  { background: #f1eff8; color: #534ab7; }
-    .badge.pendiente { background: #faeeda; color: #854f0b; }
-
-    /* ── LISTA ACTIVIDAD ── */
-    .activity { padding: .5rem 0; }
-    .activity-item {
-      display: flex; align-items: flex-start; gap: .75rem;
-      padding: .7rem 1.25rem;
-      border-bottom: 1px solid #f0f2f1;
-    }
-    .activity-item:last-child { border-bottom: none; }
-
-    .activity-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--brand);
-      margin-top: 5px; flex-shrink: 0;
-    }
-
-    .activity-dot.amber  { background: #ef9f27; }
-    .activity-dot.purple { background: #7f77dd; }
-
-    .activity-text { font-size: .83rem; color: var(--text); line-height: 1.4; }
-    .activity-time { font-size: .73rem; color: var(--muted); margin-top: .15rem; }
-
-    .empty { padding: 2rem; text-align: center; color: var(--muted); font-size: .85rem; }
+    .proy-cards { display:flex;flex-direction:column;gap:.6rem; }
+.proy-card { background:#f8faf9;border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem; }
+.proy-card.mas-cercano { background:var(--brand-light);border-color:#b2dfd0; }
+.proy-card-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem; }
+.proy-card-user { display:flex;align-items:center;gap:.6rem; }
+.proy-card-avatar { width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;flex-shrink:0; }
+.proy-card.mas-cercano .proy-card-avatar { background:var(--brand-dark); }
+.proy-card-name { font-size:.88rem;font-weight:700;color:var(--text); }
+.proy-card-rol  { font-size:.73rem;color:var(--muted); }
+.proy-card-right { text-align:right; }
+.proy-card-lbs { font-size:1rem;font-weight:700;color:var(--brand); }
+.proy-card-var { display:inline-block;font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;margin-top:.15rem; }
+.proy-card-bottom { font-size:.75rem;color:var(--muted);line-height:1.4;display:flex;flex-direction:column;gap:.2rem;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border); }
+.proy-card-badge-cercano { display:inline-block;font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .4rem;border-radius:10px;margin-left:.4rem;vertical-align:middle; }
   </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <div class="icon">
-      <svg viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/></svg>
-    </div>
-    <h2>Sistema Cosecha</h2>
-    <p>Pronóstico de camarón</p>
-  </div>
-
-  <nav class="nav">
-    <div class="nav-label">Principal</div>
-    <a href="dashboard.html" class="active">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Dashboard
-    </a>
-    <a href="cosechas.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-      Cosechas
-    </a>
-    <a href="lagunas.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-      Lagunas
-    </a>
-
-    <div class="nav-label">Administración</div>
-    <a href="usuarios.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      Usuarios
-    </a>
-    <a href="sectores.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Sectores
-    </a>
-    <a href="solicitudes.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-      Solicitudes de cambio
-    </a>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="user-info">
-      <div class="avatar" id="avatarInitial">A</div>
-      <div class="info">
-        <div class="name" id="sidebarNombre">Cargando...</div>
-        <div class="role" id="sidebarRol"></div>
-      </div>
-      <button class="btn-logout" onclick="logout()" title="Cerrar sesión">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
-  </div>
-</aside>
-
-<!-- MAIN -->
+<div id="sidebar-container"></div>
 <main class="main">
   <div class="topbar">
     <h1>Dashboard</h1>
     <span class="date" id="fechaHoy"></span>
   </div>
-
   <div class="content">
-
-    <!-- STATS -->
     <div class="stats">
       <div class="stat-card">
-        <div class="stat-icon green">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="value" id="statCosechas">—</div>
-          <div class="label">Cosechas activas</div>
-        </div>
+        <div class="stat-icon green"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
+        <div class="stat-info"><div class="value" id="statCosechas">—</div><div class="label">Cosechas activas</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon blue">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="value" id="statLagunas">—</div>
-          <div class="label">Lagunas activas</div>
-        </div>
+        <div class="stat-icon blue"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="stat-info"><div class="value" id="statLagunas">—</div><div class="label">Lagunas activas</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon amber">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="value" id="statUsuarios">—</div>
-          <div class="label">Usuarios activos</div>
-        </div>
+        <div class="stat-icon amber"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-info"><div class="value" id="statUsuarios">—</div><div class="label">Usuarios activos</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon purple">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="value" id="statSolicitudes">—</div>
-          <div class="label">Solicitudes pendientes</div>
-        </div>
+        <div class="stat-icon purple"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-info"><div class="value" id="statSolicitudes">—</div><div class="label">Solicitudes pendientes</div></div>
       </div>
     </div>
 
-    <!-- COSECHAS RECIENTES + ACTIVIDAD -->
-    <div class="grid-2">
-      <div class="panel">
-        <div class="panel-header">
-          <h3>Cosechas recientes</h3>
-          <a href="cosechas.html" class="btn-sm">Ver todas</a>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Laguna</th>
-                <th>Sector</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="tablaCosechas">
-              <tr><td colspan="4" class="empty">Cargando...</td></tr>
-            </tbody>
-          </table>
-        </div>
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Cosechas activas</h3>
+        <span class="badge-count" id="countActivas">0</span>
       </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <h3>Solicitudes de cambio</h3>
-          <a href="solicitudes.html" class="btn-sm">Ver todas</a>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Cosecha</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="tablaSolicitudes">
-              <tr><td colspan="3" class="empty">Cargando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Laguna</th>
+            <th>Sector</th>
+            <th>Fecha</th>
+            <th>Proyectado (lbs)</th>
+            <th>Peso planta (lb)</th>
+            <th>Proyecciones</th>
+            <th>Tu proyección</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCosechasActivas">
+          <tr><td colspan="7" class="empty">Cargando...</td></tr>
+        </tbody>
+      </table>
     </div>
-
   </div>
 </main>
 
-<script>
-const API = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+<!-- MODAL PROYECCIÓN -->
+<div class="overlay" id="overlayProyeccion">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar proyección</h2>
+      <button class="btn-close" onclick="cerrarModal()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-modal" id="alertProyeccion"></div>
 
-// Verificar sesión
+      <!-- Fila 1: Laguna / Sector / Fecha -->
+      <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="rb-item"><div class="rb-label">Laguna</div><div class="rb-value" id="mpLaguna">—</div></div>
+        <div class="rb-item"><div class="rb-label">Sector</div><div class="rb-value" id="mpSector">—</div></div>
+        <div class="rb-item"><div class="rb-label">Fecha</div><div class="rb-value" id="mpFecha">—</div></div>
+      </div>
+
+      <!-- Fila 2: Indicadores -->
+      <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
+        <div class="rb-item"><div class="rb-label">Lbs informe</div><div class="rb-value" id="mpLbsInforme">—</div></div>
+        <div class="rb-item"><div class="rb-label">Peso planta (lb)</div><div class="rb-value" id="mpPesoPlanta">—</div></div>
+        <div class="rb-item"><div class="rb-label">Peso gramo (g)</div><div class="rb-value" id="mpPesoGramo">—</div></div>
+        <div class="rb-item"><div class="rb-label">Hectáreas</div><div class="rb-value" id="mpHa">—</div></div>
+        <div class="rb-item"><div class="rb-label" style="color:var(--brand)">Cam/m² informe</div><div class="rb-value" style="color:var(--brand)" id="mpCamM2Informe">—</div></div>
+      </div>
+
+      <div class="form-group">
+        <label>Libras proyectadas *</label>
+        <input type="number" id="mpLibras" placeholder="0.00" step="0.01" min="0" oninput="calcularCamM2()">
+        <div style="margin-top:.5rem;background:var(--brand-light);border:1px solid #b2dfd0;border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:.78rem;color:var(--brand);font-weight:600">Cam/m² según tu proyección</span>
+          <span style="font-size:1rem;font-weight:700;color:var(--brand)" id="mpCamM2Live">—</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Parámetros de decisión <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
+        <div class="factores-grid" id="factoresGrid">
+          <div style="color:var(--muted);font-size:.82rem">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Comentario / Justificación</label>
+        <textarea id="mpComentario" placeholder="Explica el porqué de tu proyección..."></textarea>
+      </div>
+
+      <!-- PROYECCIONES REGISTRADAS -->
+      <div class="proy-table-wrap" id="otrasProy" style="display:none">
+        <div class="proy-table-title">Proyecciones registradas</div>
+        <div class="proy-cards" id="tablaOtrasProy">
+          <div class="proy-empty">Cargando...</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" id="btnGuardarProyeccion" onclick="guardarProyeccion()">
+        <span class="save-text">Guardar proyección</span>
+        <span class="spinner"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API     = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 const token   = localStorage.getItem('token');
 const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
-if (!token || !usuario) {
-  window.location.href = 'login.html';
+if (!token || !usuario) window.location.href = 'login.html';
+
+
+if (usuario?.rol !== 'Admin') {
+  document.getElementById('linkUsuarios')?.remove();
 }
 
-// Mostrar datos de usuario en sidebar
-document.getElementById('sidebarNombre').textContent  = usuario?.nombre || '';
-document.getElementById('sidebarRol').textContent     = usuario?.rol    || '';
-document.getElementById('avatarInitial').textContent  = (usuario?.nombre || 'A')[0].toUpperCase();
-
-// Fecha de hoy
-const hoy = new Date().toLocaleDateString('es-HN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+const hoy = new Date().toLocaleDateString('es-HN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
 document.getElementById('fechaHoy').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
 
 function authHeader() {
   return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+function fmt(n, d=2) { return n != null ? Number(n).toLocaleString('es-HN',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—'; }
 
-function logout() {
-  localStorage.clear();
-  window.location.href = 'login.html';
-}
-
-// Cargar stats
 async function cargarStats() {
   try {
     const res  = await fetch(`${API}/dashboard/stats`, { headers: authHeader() });
     const data = await res.json();
     if (data.success) {
-      document.getElementById('statCosechas').textContent   = data.data.cosechas_activas   ?? '0';
-      document.getElementById('statLagunas').textContent    = data.data.lagunas_activas    ?? '0';
-      document.getElementById('statUsuarios').textContent   = data.data.usuarios_activos   ?? '0';
+      document.getElementById('statCosechas').textContent    = data.data.cosechas_activas       ?? '0';
+      document.getElementById('statLagunas').textContent     = data.data.lagunas_activas        ?? '0';
+      document.getElementById('statUsuarios').textContent    = data.data.usuarios_activos       ?? '0';
       document.getElementById('statSolicitudes').textContent = data.data.solicitudes_pendientes ?? '0';
     }
-  } catch (e) {
-    console.error('Error stats:', e);
+  } catch(e) {}
+}
+
+async function cargarCosechasActivas() {
+  try {
+    const res   = await fetch(`${API}/dashboard/cosechas-activas`, { headers: authHeader() });
+    const data  = await res.json();
+    const lista = data.success ? data.data : [];
+    document.getElementById('countActivas').textContent = lista.length;
+    const tbody = document.getElementById('tablaCosechasActivas');
+
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay cosechas activas</td></tr>';
+      return;
+    }
+
+    window._cosechasActivas = {};
+    lista.forEach(c => window._cosechasActivas[c.id] = c);
+
+    tbody.innerHTML = lista.map(c => {
+      const yaProyecto = c.ya_proyecte > 0;
+      const btnHtml = yaProyecto
+        ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
+        : `<button class="btn-proyectar" onclick="abrirProyeccion(${c.id})">
+             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+             Proyectar
+           </button>`;
+      return `<tr>
+        <td style="font-weight:600">${c.laguna}</td>
+        <td>${c.sector}</td>
+        <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
+        <td>${fmt(c.cantidad_proyectada_lbs)}</td>
+        <td>${fmt(c.peso_planta_lb)}</td>
+        <td style="text-align:center">
+          <span style="background:var(--brand-light);color:var(--brand);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;font-weight:700">${c.total_proyecciones}</span>
+        </td>
+        <td>${btnHtml}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('tablaCosechasActivas').innerHTML = '<tr><td colspan="7" class="empty">Error al cargar</td></tr>';
   }
 }
 
-// Cargar cosechas recientes
-async function cargarCosechas() {
-  try {
-    const res  = await fetch(`${API}/cosechas?limit=5`, { headers: authHeader() });
-    const data = await res.json();
-    const tbody = document.getElementById('tablaCosechas');
-    if (data.success && data.data.length > 0) {
-      tbody.innerHTML = data.data.map(c => `
-        <tr>
-          <td>${c.laguna}</td>
-          <td>${c.sector}</td>
-          <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
-          <td><span class="badge ${c.estado}">${c.estado}</span></td>
-        </tr>
-      `).join('');
-    } else {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty">Sin cosechas registradas</td></tr>';
-    }
-  } catch (e) {
-    document.getElementById('tablaCosechas').innerHTML = '<tr><td colspan="4" class="empty">Error al cargar</td></tr>';
+let factores = [];
+let cosechaActual = null;
+
+async function abrirProyeccion(cosechaId) {
+  cosechaActual = window._cosechasActivas[cosechaId] || window._cosechasActivas[parseInt(cosechaId)];
+  if (!cosechaActual) return;
+
+  document.getElementById('mpLaguna').textContent    = cosechaActual.laguna;
+  document.getElementById('mpSector').textContent    = cosechaActual.sector;
+  document.getElementById('mpFecha').textContent     = new Date(cosechaActual.fecha).toLocaleDateString('es-HN');
+  document.getElementById('mpLibras').value          = '';
+  document.getElementById('mpComentario').value      = '';
+  document.getElementById('mpCamM2Live').textContent = '—';
+  document.getElementById('alertProyeccion').classList.remove('show');
+
+  const lbs = cosechaActual.cantidad_proyectada_lbs;
+  const pp  = cosechaActual.peso_planta_lb;
+  const pg  = cosechaActual.peso_gramos_cosecha;
+  const ha  = cosechaActual.hectareas;
+
+  document.getElementById('mpLbsInforme').textContent  = lbs ? fmt(lbs) : '—';
+  document.getElementById('mpPesoPlanta').textContent  = pp  ? fmt(pp)  : '—';
+  document.getElementById('mpPesoGramo').textContent   = pg  ? fmt(pg)  : '—';
+  document.getElementById('mpHa').textContent          = ha  ? fmt(ha)  : '—';
+  const camInforme = (lbs && pg && ha) ? (lbs * 454.4 / pg / (ha * 10000)).toFixed(2) : null;
+  document.getElementById('mpCamM2Informe').textContent = camInforme ? fmt(Number(camInforme)) : '—';
+
+  await cargarFactores();
+
+  const yaProyecto = cosechaActual.ya_proyecte > 0;
+  const otrasProy  = document.getElementById('otrasProy');
+  const grpLibras  = document.getElementById('mpLibras').closest('.form-group');
+  const grpComment = document.getElementById('mpComentario').closest('.form-group');
+  const grpFactores= document.getElementById('factoresGrid').closest('.form-group');
+  const btnGuardar = document.getElementById('btnGuardarProyeccion');
+  const footer     = document.querySelector('.modal-footer');
+
+  if (yaProyecto) {
+    otrasProy.style.display   = 'block';
+    grpLibras.style.display   = 'none';
+    grpComment.style.display  = 'none';
+    grpFactores.style.display = 'none';
+    btnGuardar.style.display  = 'none';
+    footer.style.display      = 'none';
+    cargarProyeccionesCosecha(cosechaActual.id);
+  } else {
+    otrasProy.style.display   = 'none';
+    grpLibras.style.display   = 'block';
+    grpComment.style.display  = 'block';
+    grpFactores.style.display = 'block';
+    btnGuardar.style.display  = 'flex';
+    footer.style.display      = 'flex';
+  }
+
+  document.getElementById('overlayProyeccion').classList.add('open');
+}
+
+function calcularCamM2() {
+  if (!cosechaActual) return;
+  const lbs = parseFloat(document.getElementById('mpLibras').value);
+  const pg  = cosechaActual.peso_gramos_cosecha;
+  const ha  = cosechaActual.hectareas;
+  const el  = document.getElementById('mpCamM2Live');
+  if (lbs && pg && ha) {
+    el.textContent = fmt(lbs * 454.4 / pg / (ha * 10000));
+  } else {
+    el.textContent = '—';
   }
 }
 
-// Cargar solicitudes pendientes
-async function cargarSolicitudes() {
+function cerrarModal() {
+  document.getElementById('overlayProyeccion').classList.remove('open');
+  cosechaActual = null;
+}
+
+async function cargarFactores() {
+  if (factores.length) { renderFactores(); return; }
   try {
-    const res  = await fetch(`${API}/solicitudes?estado=pendiente&limit=5`, { headers: authHeader() });
+    const res  = await fetch(`${API}/proyecciones/factores`, { headers: authHeader() });
     const data = await res.json();
-    const tbody = document.getElementById('tablaSolicitudes');
-    if (data.success && data.data.length > 0) {
-      tbody.innerHTML = data.data.map(s => `
-        <tr>
-          <td>${s.usuario}</td>
-          <td>${s.laguna} — ${new Date(s.fecha).toLocaleDateString('es-HN')}</td>
-          <td><span class="badge pendiente">Pendiente</span></td>
-        </tr>
-      `).join('');
-    } else {
-      tbody.innerHTML = '<tr><td colspan="3" class="empty">Sin solicitudes pendientes</td></tr>';
+    factores   = data.success ? data.data : [];
+    renderFactores();
+  } catch(e) {}
+}
+
+function renderFactores() {
+  document.getElementById('factoresGrid').innerHTML = factores.map(f => `
+    <div class="factor-item" id="fi_${f.id}" onclick="this.classList.toggle('checked')">
+      <div class="factor-check"></div>
+      <span>${f.nombre}</span>
+    </div>
+  `).join('');
+}
+
+async function guardarProyeccion() {
+  const libras     = parseFloat(document.getElementById('mpLibras').value);
+  const comentario = document.getElementById('mpComentario').value.trim();
+  const factoresSeleccionados = [...document.querySelectorAll('.factor-item.checked')]
+    .map(el => parseInt(el.id.replace('fi_','')));
+  const alertEl = document.getElementById('alertProyeccion');
+  alertEl.classList.remove('show');
+
+  if (!libras || libras <= 0) {
+    alertEl.textContent = 'Ingresa las libras proyectadas.';
+    alertEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('btnGuardarProyeccion');
+  btn.disabled = true; btn.classList.add('loading');
+
+  try {
+    const res  = await fetch(`${API}/proyecciones`, {
+      method: 'POST', headers: authHeader(),
+      body: JSON.stringify({ cosecha_id: cosechaActual.id, libras_proyectadas: libras, comentario: comentario || null, factores: factoresSeleccionados }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alertEl.textContent = data.message || 'Error al guardar.';
+      alertEl.classList.add('show');
+      return;
     }
-  } catch (e) {
-    document.getElementById('tablaSolicitudes').innerHTML = '<tr><td colspan="3" class="empty">Error al cargar</td></tr>';
+    cerrarModal();
+    cargarCosechasActivas();
+    cargarStats();
+  } catch(e) {
+    alertEl.textContent = 'Error de conexión.';
+    alertEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+}
+async function cargarProyeccionesCosecha(cosechaId) {
+  const container = document.getElementById('tablaOtrasProy');
+  const pp = cosechaActual ? cosechaActual.peso_planta_lb : null;
+  try {
+    const res  = await fetch(`${API}/proyecciones/cosecha/${cosechaId}`, { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success || !data.data.length) {
+      container.innerHTML = '<div class="proy-empty">Sin proyecciones aún</div>';
+      return;
+    }
+
+    let lista = [...data.data];
+    if (pp) {
+      lista.sort((a, b) => {
+        const va = Math.abs((a.libras_proyectadas - pp) / pp * 100);
+        const vb = Math.abs((b.libras_proyectadas - pp) / pp * 100);
+        return va - vb;
+      });
+    }
+
+    container.innerHTML = lista.map((p, i) => {
+      const variacion = pp ? ((p.libras_proyectadas - pp) / pp * 100) : null;
+      let varColor = 'var(--muted)', varBg = '#f0f0f0';
+      if (variacion !== null) {
+        const abs = Math.abs(variacion);
+        if (abs <= 5)       { varColor = '#0f6e56'; varBg = '#e1f5ee'; }
+        else if (abs <= 10) { varColor = '#854f0b'; varBg = '#faeeda'; }
+        else                { varColor = '#c0392b'; varBg = '#fdf0ee'; }
+      }
+      const varStr = variacion !== null ? (variacion > 0 ? '+' : '') + variacion.toFixed(2) + '%' : '—';
+      const esMasCercano = pp && i === 0;
+      return `<div class="proy-card${esMasCercano ? ' mas-cercano' : ''}">
+        <div class="proy-card-top">
+          <div class="proy-card-user">
+            <div class="proy-card-avatar">${p.usuario[0].toUpperCase()}</div>
+            <div>
+              <div class="proy-card-name">
+                ${i+1}. ${p.usuario}
+                ${esMasCercano ? '<span class="proy-card-badge-cercano">↑ más cercano</span>' : ''}
+              </div>
+              <div class="proy-card-rol">${p.rol}</div>
+            </div>
+          </div>
+          <div class="proy-card-right">
+            <div class="proy-card-lbs">${fmt(p.libras_proyectadas)} lbs</div>
+            <span class="proy-card-var" style="color:${varColor};background:${varBg}">${varStr}</span>
+          </div>
+        </div>
+        ${(p.parametros || p.comentario) ? `<div class="proy-card-bottom">
+          ${p.parametros ? `<span>📌 ${p.parametros}</span>` : ''}
+          ${p.comentario ? `<span>💬 ${p.comentario}</span>` : ''}
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div class="proy-empty">Error al cargar</div>';
   }
 }
 
 cargarStats();
-cargarCosechas();
-cargarSolicitudes();
+cargarCosechasActivas();
 </script>
+<script src="sidebar.js"></script>
 </body>
 </html>

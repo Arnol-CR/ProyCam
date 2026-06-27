@@ -123,61 +123,66 @@
 
     .alert-modal { background:#fdf0ee;border:1px solid #f5c6c0;border-radius:var(--radius);color:var(--danger);font-size:.82rem;padding:.6rem .85rem;margin-bottom:1rem;display:none; }
     .alert-modal.show { display:block; }
+
+    /* PANEL EDICIÓN */
+    .edit-panel {
+      position: fixed;
+      top: 0; right: -420px;
+      width: 400px;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      box-shadow: -8px 0 32px rgba(0,0,0,.12);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      transition: right .28s cubic-bezier(.4,0,.2,1);
+    }
+    .edit-panel.open { right: 0; }
+
+    .ep-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ep-header h3 { font-size:.95rem; font-weight:700; }
+    .ep-meta { font-size:.78rem; color:var(--muted); margin-top:.15rem; }
+
+    .ep-body { flex:1; overflow-y:auto; padding:1.5rem; }
+    .ep-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; gap:.75rem; justify-content:flex-end; }
+
+    .ep-section { margin-bottom:1.25rem; }
+    .ep-section label { display:block; font-size:.8rem; font-weight:600; margin-bottom:.35rem; }
+
+    .estado-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5rem; }
+    .estado-opt  { display:none; }
+    .estado-label {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:.6rem .4rem; border:2px solid var(--border); border-radius:8px;
+      cursor:pointer; font-size:.78rem; font-weight:600; color:var(--muted);
+      transition: all .15s; text-align:center; gap:.25rem;
+    }
+    .estado-label svg { width:18px; height:18px; }
+    .estado-opt:checked + .estado-label { border-color:var(--brand); background:var(--brand-light); color:var(--brand); }
+    .estado-opt[value="cerrada"]:checked + .estado-label { border-color:#534ab7; background:#f1eff8; color:#534ab7; }
+    .estado-opt[value="cancelada"]:checked + .estado-label { border-color:#c0392b; background:#fdf0ee; color:#c0392b; }
+
+    .ep-stat { background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:.75rem 1rem; margin-bottom:.6rem; display:flex; align-items:center; justify-content:space-between; }
+    .ep-stat .es-label { font-size:.75rem; color:var(--muted); }
+    .ep-stat .es-value { font-size:.95rem; font-weight:700; color:var(--text); }
+
+    .overlay-dim { position:fixed; inset:0; background:rgba(0,0,0,.2); z-index:299; display:none; }
+    .overlay-dim.show { display:block; }
+
+    tbody tr.selected { background:#f0f9f5 !important; }
+    tbody tr { cursor:pointer; }
+
   </style>
 </head>
 <body>
+<script src="sidebar.js"></script>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <div class="icon">
-      <svg viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/></svg>
-    </div>
-    <h2>Sistema Cosecha</h2>
-    <p>Pronóstico de camarón</p>
-  </div>
-  <nav class="nav">
-    <div class="nav-label">Principal</div>
-    <a href="dashboard.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Dashboard
-    </a>
-    <a href="cosechas.html" class="active">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-      Cosechas
-    </a>
-    <a href="lagunas.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-      Lagunas
-    </a>
-    <div class="nav-label">Administración</div>
-    <a href="usuarios.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      Usuarios
-    </a>
-    <a href="sectores.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Sectores
-    </a>
-    <a href="solicitudes.html">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-      Solicitudes
-    </a>
-  </nav>
-  <div class="sidebar-footer">
-    <div class="user-info">
-      <div class="avatar" id="avatarInitial">A</div>
-      <div class="info">
-        <div class="name" id="sidebarNombre"></div>
-        <div class="role" id="sidebarRol"></div>
-      </div>
-      <button class="btn-logout" onclick="logout()">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
-  </div>
-</aside>
-
+<div id="sidebar-container"></div>
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
@@ -210,13 +215,14 @@
               <th>Fecha</th>
               <th>Proyectado (lbs)</th>
               <th>Peso planta (lb)</th>
+              <th>Peso gramos (g)</th>
               <th>Proyecciones</th>
               <th>Estado</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="tablaCosechas">
-            <tr><td colspan="9" class="empty">Cargando...</td></tr>
+            <tr><td colspan="10" class="empty">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -258,21 +264,21 @@
           <input type="date" id="fFecha" onchange="actualizarPreview()">
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Cant. proyectada (lbs)</label>
-            <input type="number" id="fCantidad" placeholder="0.00" step="0.01" min="0" oninput="actualizarPreview()">
-            <div class="field-hint">Según informe</div>
-          </div>
-          <div class="form-group">
-            <label>Peso planta (lb)</label>
-            <input type="number" id="fPesoPlanta" placeholder="0.000" step="0.001" min="0" oninput="actualizarPreview()">
-          </div>
+        <div class="form-group">
+          <label>Cant. proyectada (lbs)</label>
+          <input type="number" id="fCantidad" placeholder="0.00" step="0.01" min="0" oninput="actualizarPreview()">
+          <div class="field-hint">Según informe</div>
         </div>
 
-        <div class="form-group">
-          <label>Peso gramos cosecha</label>
-          <input type="number" id="fPesoGramos" placeholder="0.000" step="0.001" min="0" oninput="actualizarPreview()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Peso planta (lb)</label>
+            <input type="number" id="fPesoPlanta" placeholder="0.00" step="0.01" min="0" oninput="actualizarPreview()">
+          </div>
+          <div class="form-group">
+            <label>Peso gramos cosecha</label>
+            <input type="number" id="fPesoGramos" placeholder="0.00" step="0.01" min="0" oninput="actualizarPreview()">
+          </div>
         </div>
 
         <div class="form-group">
@@ -307,10 +313,6 @@ const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
 if (!token || !usuario) window.location.href = 'login.html';
 
-document.getElementById('sidebarNombre').textContent = usuario?.nombre || '';
-document.getElementById('sidebarRol').textContent    = usuario?.rol    || '';
-document.getElementById('avatarInitial').textContent = (usuario?.nombre || 'A')[0].toUpperCase();
-
 function authHeader() {
   return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
@@ -329,7 +331,7 @@ async function cargarCosechas() {
     todasCosechas = data.success ? data.data : [];
     renderTabla(todasCosechas);
   } catch (e) {
-    document.getElementById('tablaCosechas').innerHTML = '<tr><td colspan="9" class="empty">Error al cargar cosechas</td></tr>';
+    document.getElementById('tablaCosechas').innerHTML = '<tr><td colspan="10" class="empty">Error al cargar cosechas</td></tr>';
   }
 }
 
@@ -344,17 +346,22 @@ function filtrarTabla() {
 function renderTabla(lista) {
   const tbody = document.getElementById('tablaCosechas');
   if (!lista.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">Sin cosechas registradas</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">Sin cosechas registradas</td></tr>';
     return;
   }
+  // Store data in window for safe access
+  window._cosechasData = {};
+  lista.forEach(c => window._cosechasData[c.id] = c);
+
   tbody.innerHTML = lista.map(c => `
-    <tr>
+    <tr data-id="${c.id}" onclick="abrirEdicion(window._cosechasData[${c.id}])">
       <td style="color:var(--muted);font-size:.78rem">#${c.id}</td>
       <td style="font-weight:600">${c.laguna}</td>
       <td>${c.sector}</td>
       <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
       <td>${c.cantidad_proyectada_lbs ? Number(c.cantidad_proyectada_lbs).toLocaleString('es-HN', {minimumFractionDigits:2}) : '—'}</td>
-      <td>${c.peso_planta_lb ? Number(c.peso_planta_lb).toFixed(3) : '—'}</td>
+      <td>${c.peso_planta_lb ? Number(c.peso_planta_lb).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
+      <td>${c.peso_gramos_cosecha ? Number(c.peso_gramos_cosecha).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
       <td style="text-align:center">
         <span style="background:var(--brand-light);color:var(--brand);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;font-weight:700">
           ${c.total_proyecciones}
@@ -362,8 +369,8 @@ function renderTabla(lista) {
       </td>
       <td><span class="badge ${c.estado}">${c.estado}</span></td>
       <td>
-        <button class="btn-icon" onclick="verDetalle(${c.id})" title="Ver detalle">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <button class="btn-icon" onclick="event.stopPropagation();abrirEdicion(window._cosechasData[${c.id}])" title="Editar">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
       </td>
     </tr>
@@ -377,7 +384,10 @@ async function abrirModal() {
   document.getElementById('overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
   await cargarSectores();
-  document.getElementById('fFecha').value = new Date().toISOString().split('T')[0];
+  // Fecha Honduras UTC-6
+  const ahora = new Date();
+  const hn = new Date(ahora.getTime() - (6 * 60 * 60 * 1000));
+  document.getElementById('fFecha').value = hn.toISOString().split('T')[0];
   actualizarPreview();
 }
 
@@ -466,7 +476,10 @@ function actualizarPreview() {
   const ha     = opt ? parseFloat(opt.dataset.ha) : null;
 
   // calcular lbs/hectárea si hay datos
-  const lbsHa = (cantidad && ha) ? (cantidad / ha).toFixed(1) : null;
+  const lbsHa  = (cantidad && ha) ? (cantidad / ha).toFixed(1) : null;
+  const cam_m2 = (cantidad && pesoGramos && ha)
+    ? (cantidad * 454.4 / pesoGramos / (ha * 10000)).toFixed(2)
+    : null;
 
   const fechaStr = fecha ? new Date(fecha + 'T00:00:00').toLocaleDateString('es-HN', {day:'2-digit', month:'long', year:'numeric'}) : '—';
 
@@ -489,18 +502,26 @@ function actualizarPreview() {
       </div>
       <div class="preview-item">
         <div class="pi-label">Lbs / hectárea</div>
-        <div class="pi-value" style="color:${lbsHa ? 'var(--brand)' : 'var(--muted)'}">${lbsHa ? lbsHa : '—'}</div>
+        <div class="pi-value" style="color:${lbsHa ? 'var(--brand)' : 'var(--muted)'}">${lbsHa ? Number(lbsHa).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</div>
       </div>
       <div class="preview-item">
         <div class="pi-label">Peso planta</div>
-        <div class="pi-value">${pesoPlanta ? pesoPlanta.toFixed(3) + ' lb' : '—'}</div>
+        <div class="pi-value">${pesoPlanta ? pesoPlanta.toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' lb' : '—'}</div>
       </div>
       <div class="preview-item">
         <div class="pi-label">Peso gramos</div>
-        <div class="pi-value">${pesoGramos ? pesoGramos.toFixed(3) + ' g' : '—'}</div>
+        <div class="pi-value">${pesoGramos ? pesoGramos.toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' g' : '—'}</div>
       </div>
     </div>
+    <div class="preview-item" style="margin-top:.6rem;background:var(--brand-light);border-color:#b2dfd0;" id="prevCamM2">
+      <div class="pi-label" style="color:var(--brand)">Camarones / m²</div>
+      <div class="pi-value" style="color:var(--brand);" id="prevCamM2Val">—</div>
+    </div>
   `;
+
+  // Actualizar camarones/m2 dinámicamente
+  const el = document.getElementById('prevCamM2Val');
+  if (el) el.textContent = cam_m2 ? Number(cam_m2).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
 }
 
 // ── GUARDAR ──
@@ -557,6 +578,163 @@ function verDetalle(id) {
 
 // Inicializar
 cargarCosechas();
+
+// ── PANEL EDICIÓN ──
+let cosechaEditando = null;
+
+function abrirEdicion(c) {
+  cosechaEditando = c;
+
+  document.getElementById('epTitulo').textContent = `${c.laguna} — ${c.sector}`;
+  document.getElementById('epMeta').textContent   = new Date(c.fecha).toLocaleDateString('es-HN', {day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('epProyecciones').textContent = c.total_proyecciones ?? '0';
+  document.getElementById('epCantidad').textContent     = c.cantidad_proyectada_lbs
+    ? Number(c.cantidad_proyectada_lbs).toLocaleString('es-HN',{minimumFractionDigits:2}) + ' lbs' : '—';
+  document.getElementById('epPesoGramos').textContent   = c.peso_gramos_cosecha
+    ? Number(c.peso_gramos_cosecha).toFixed(2) + ' g' : '—';
+
+  // Estado actual
+  const radio = document.querySelector(`input[name="epEstado"][value="${c.estado}"]`);
+  if (radio) radio.checked = true;
+
+  document.getElementById('epPesoPlanta').value    = c.peso_planta_lb ?? '';
+  document.getElementById('epObservaciones').value = c.observaciones  ?? '';
+  document.getElementById('alertEdit').classList.remove('show');
+
+  // Marcar fila seleccionada
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  document.querySelector(`tr[data-id="${c.id}"]`)?.classList.add('selected');
+
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('dimOverlay').classList.add('show');
+}
+
+function cerrarEdicion() {
+  document.getElementById('editPanel').classList.remove('open');
+  document.getElementById('dimOverlay').classList.remove('show');
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  cosechaEditando = null;
+}
+
+async function guardarEdicion() {
+  if (!cosechaEditando) return;
+  const estado        = document.querySelector('input[name="epEstado"]:checked')?.value;
+  const peso_planta_lb= parseFloat(document.getElementById('epPesoPlanta').value) || null;
+  const observaciones = document.getElementById('epObservaciones').value || null;
+  const alertEl       = document.getElementById('alertEdit');
+  alertEl.classList.remove('show');
+
+  const btn = document.getElementById('btnGuardarEdit');
+  btn.disabled = true; btn.classList.add('loading');
+
+  try {
+    const res  = await fetch(`${API}/cosechas/${cosechaEditando.id}`, {
+      method:  'PATCH',
+      headers: authHeader(),
+      body:    JSON.stringify({ estado, peso_planta_lb, observaciones }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alertEl.textContent = data.message || 'Error al guardar.';
+      alertEl.classList.add('show');
+      return;
+    }
+    cerrarEdicion();
+    cargarCosechas();
+  } catch(e) {
+    alertEl.textContent = 'Error de conexión.';
+    alertEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+}
+
 </script>
+
+<!-- DIM OVERLAY -->
+<div class="overlay-dim" id="dimOverlay" onclick="cerrarEdicion()"></div>
+
+<!-- PANEL EDICIÓN -->
+<div class="edit-panel" id="editPanel">
+  <div class="ep-header">
+    <div>
+      <h3 id="epTitulo">Editar cosecha</h3>
+      <div class="ep-meta" id="epMeta"></div>
+    </div>
+    <button class="btn-close" onclick="cerrarEdicion()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="ep-body">
+    <!-- Stats rápidos -->
+    <div class="ep-stat">
+      <span class="es-label">Proyecciones registradas</span>
+      <span class="es-value" id="epProyecciones">—</span>
+    </div>
+    <div class="ep-stat">
+      <span class="es-label">Cant. proyectada (admin)</span>
+      <span class="es-value" id="epCantidad">—</span>
+    </div>
+    <div class="ep-stat">
+      <span class="es-label">Peso gramos cosecha</span>
+      <span class="es-value" id="epPesoGramos">—</span>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
+    <!-- Estado -->
+    <div class="ep-section">
+      <label>Estado de la cosecha</label>
+      <div class="estado-grid">
+        <div>
+          <input class="estado-opt" type="radio" name="epEstado" id="est_abierta" value="abierta">
+          <label class="estado-label" for="est_abierta">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Abierta
+          </label>
+        </div>
+        <div>
+          <input class="estado-opt" type="radio" name="epEstado" id="est_cerrada" value="cerrada">
+          <label class="estado-label" for="est_cerrada">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Cerrada
+          </label>
+        </div>
+        <div>
+          <input class="estado-opt" type="radio" name="epEstado" id="est_cancelada" value="cancelada">
+          <label class="estado-label" for="est_cancelada">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Cancelada
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peso planta -->
+    <div class="ep-section">
+      <label for="epPesoPlanta">Peso planta (lb)</label>
+      <input type="number" id="epPesoPlanta" placeholder="0.00" step="0.01" min="0">
+    </div>
+
+    <!-- Observaciones -->
+    <div class="ep-section">
+      <label for="epObservaciones">Observaciones</label>
+      <textarea id="epObservaciones" style="width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.9rem;font-family:inherit;resize:vertical;min-height:80px;outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+
+    <div class="alert-modal" id="alertEdit"></div>
+  </div>
+
+  <div class="ep-footer">
+    <button class="btn-cancel" onclick="cerrarEdicion()">Cancelar</button>
+    <button class="btn-save" id="btnGuardarEdit" onclick="guardarEdicion()">
+      <span class="save-text">Guardar cambios</span>
+      <span class="spinner"></span>
+    </button>
+  </div>
+</div>
+
+<script src="sidebar.js"></script>
 </body>
 </html>

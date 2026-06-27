@@ -3,21 +3,27 @@ const { ok, error }    = require('../utils/response');
 
 const listar = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 50;
-    const pool  = await getPool();
-    const result = await pool.request()
-      .input('limit', sql.Int, limit)
-      .query(`
+    const limit  = parseInt(req.query.limit) || 100;
+    const estado = req.query.estado || null;
+    const pool   = await getPool();
+    const request = pool.request().input('limit', sql.Int, limit);
+    let where = '';
+    if (estado) {
+      request.input('estado', sql.NVarChar, estado);
+      where = "WHERE c.estado = @estado";
+    }
+    const result = await request.query(`
         SELECT TOP (@limit)
           c.id, l.nombre AS laguna, s.nombre AS sector,
           c.fecha, c.estado, c.cantidad_proyectada_lbs,
           c.peso_planta_lb, c.peso_gramos_cosecha,
-          u.nombre AS creado_por,
+          c.observaciones, u.nombre AS creado_por,
           (SELECT COUNT(*) FROM ProyeccionesUsuario pu WHERE pu.cosecha_id = c.id) AS total_proyecciones
         FROM  Cosechas c
         JOIN  Lagunas  l ON l.id = c.laguna_id
         JOIN  Sectores s ON s.id = l.sector_id
         JOIN  Usuarios u ON u.id = c.creado_por
+        ${where}
         ORDER BY c.created_at DESC
       `);
     return ok(res, result.recordset);
@@ -79,3 +85,29 @@ const obtener = async (req, res) => {
 };
 
 module.exports = { listar, crear, obtener };
+
+const actualizar = async (req, res) => {
+  const { peso_planta_lb, estado, observaciones } = req.body;
+  try {
+    const pool = await getPool();
+    await pool.request()
+      .input('id',            sql.Int,        req.params.id)
+      .input('peso_planta_lb', sql.Decimal(10,2), peso_planta_lb ?? null)
+      .input('estado',        sql.NVarChar,   estado ?? null)
+      .input('observaciones', sql.NVarChar,   observaciones ?? null)
+      .query(`
+        UPDATE Cosechas SET
+          peso_planta_lb  = COALESCE(@peso_planta_lb, peso_planta_lb),
+          estado          = COALESCE(@estado, estado),
+          observaciones   = COALESCE(@observaciones, observaciones),
+          updated_at      = GETDATE()
+        WHERE id = @id
+      `);
+    return ok(res, {}, 'Cosecha actualizada');
+  } catch (err) {
+    console.error(err);
+    return error(res, 'Error al actualizar cosecha');
+  }
+};
+
+module.exports = { listar, crear, obtener, actualizar };
