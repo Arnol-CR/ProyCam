@@ -3,628 +3,1289 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Dashboard - Sistema Cosecha</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ============================================================
+       ESTILOS GLOBALES
+       ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     :root {
-      --brand:#0f6e56; --brand-dark:#085041; --brand-light:#e1f5ee;
-      --bg:#f0f2f1; --surface:#fff; --border:#dde2e0;
-      --text:#1a2e28; --muted:#5f7570; --danger:#c0392b;
-      --radius:10px; --sidebar-w:240px;
-    }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
-    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; transition:transform .25s ease; }
-    .sidebar.collapsed { transform:translateX(-100%); }
-    .sidebar-brand { padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,.1); }
-    .sidebar-brand .icon { width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem; }
-    .sidebar-brand .icon svg { width:20px;height:20px;fill:#fff; }
-    .sidebar-brand h2 { color:#fff;font-size:.95rem;font-weight:700; }
-    .sidebar-brand p  { color:rgba(255,255,255,.5);font-size:.72rem;margin-top:.1rem; }
-    .nav { flex:1;padding:.75rem 0;overflow-y:auto; }
-    .nav-label { color:rgba(255,255,255,.35);font-size:.67rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.9rem 1.2rem .3rem; }
-    .nav a { display:flex;align-items:center;gap:.65rem;padding:.55rem 1.2rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:background .15s,color .15s; }
-    .nav a:hover { background:rgba(255,255,255,.07);color:#fff; }
-    .nav a.active { background:rgba(255,255,255,.12);color:#fff;border-left-color:#5DCAA5; }
-    .nav a svg { width:18px;height:18px;flex-shrink:0; }
-    .sidebar-footer { padding:.9rem 1.2rem;border-top:1px solid rgba(255,255,255,.1); }
-    .user-info { display:flex;align-items:center;gap:.6rem; }
-    .avatar { width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;font-weight:700;flex-shrink:0; }
-    .user-info .info { flex:1;min-width:0; }
-    .user-info .name { color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .user-info .role { color:rgba(255,255,255,.45);font-size:.7rem; }
-    .btn-logout { background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);padding:4px;display:flex;align-items:center; }
-    .btn-logout:hover { color:#fff; }
-    .btn-logout svg { width:16px;height:16px; }
-    .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;transition:margin-left .25s ease; }
-    .main.expanded { margin-left:0; }
-    .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
-    .topbar h1 { font-size:1rem;font-weight:600; }
-    .topbar .date { font-size:.8rem;color:var(--muted); }
-    .content { padding:1.75rem;flex:1; }
-    .stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.75rem; }
-    .stat-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;display:flex;align-items:center;gap:1rem; }
-    .stat-icon { width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-    .stat-icon svg { width:22px;height:22px; }
-    .stat-icon.green  { background:#e1f5ee;color:#0f6e56; }
-    .stat-icon.blue   { background:#e6f1fb;color:#185fa5; }
-    .stat-icon.amber  { background:#faeeda;color:#854f0b; }
-    .stat-icon.purple { background:#eeedfe;color:#534ab7; }
-    .stat-info .value { font-size:1.6rem;font-weight:700;color:var(--text);line-height:1; }
-    .stat-info .label { font-size:.78rem;color:var(--muted);margin-top:.25rem; }
-    .panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem; }
-    .panel-header { padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
-    .panel-header h3 { font-size:.9rem;font-weight:600; }
-    .panel-header .badge-count { background:var(--brand-light);color:var(--brand);font-size:.75rem;font-weight:700;padding:.2rem .55rem;border-radius:20px; }
-    table { width:100%;border-collapse:collapse;font-size:.85rem; }
-    thead th { background:#f8faf9;padding:.65rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border); }
-    tbody tr { border-bottom:1px solid #f0f2f1; }
-    tbody tr:last-child { border-bottom:none; }
-    tbody td { padding:.75rem 1rem; }
-    .empty { padding:2.5rem;text-align:center;color:var(--muted);font-size:.85rem; }
-    .badge { display:inline-block;padding:.2rem .55rem;border-radius:20px;font-size:.72rem;font-weight:600; }
-    .badge.abierta { background:#e1f5ee;color:#0f6e56; }
-    .btn-proyectar { padding:.35rem .85rem;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;transition:background .15s; }
-    .btn-proyectar:hover { background:var(--brand-dark); }
-    .btn-proyectar svg { width:13px;height:13px; }
-    .btn-ver { padding:.35rem .85rem;background:none;color:#185fa5;border:1.5px solid #185fa5;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem; min-width:160px;justify-content:center; }
-
-    /* HAMBURGER / SIDEBAR TOGGLE */
-    .hamburger { display:flex;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center; }
-    .hamburger svg { width:22px;height:22px; }
-    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150; }
-
-    @media (max-width:768px) {
-      .sidebar { transform:translateX(-100%);z-index:200; }
-      .sidebar.open { transform:translateX(0); }
-      .sidebar.collapsed { transform:translateX(-100%) !important; }
-      .main { margin-left:0 !important; }
-      .main.expanded { margin-left:0 !important; }
-      .topbar { padding:0 1rem; }
-      .content { padding:1rem; }
-      .stats { grid-template-columns:1fr 1fr;gap:.75rem; }
-      .stat-card { padding:1rem; }
-      .stat-info .value { font-size:1.3rem; }
-      .panel { overflow-x:auto; }
-      table { min-width:580px; }
-      thead th:nth-child(4), tbody td:nth-child(4),
-      thead th:nth-child(5), tbody td:nth-child(5) { display:none; }
-      .btn-ver, .btn-proyectar { padding:.3rem .5rem;font-size:.72rem;min-width:unset; }
-      .modal { border-radius:12px; }
-      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
-      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
-      .factores-grid { grid-template-columns:1fr 1fr!important; }
-      .proy-table { min-width:480px; }
-      .proy-table-wrap { overflow-x:auto; }
-    }
-    @media (max-width:420px) {
-      .stats { grid-template-columns:1fr; }
+      --brand: #0f6e56;
+      --brand-dark: #085041;
+      --brand-light: #e1f5ee;
+      --bg: #f0f2f1;
+      --surface: #fff;
+      --border: #dde2e0;
+      --text: #1a2e28;
+      --muted: #5f7570;
+      --danger: #c0392b;
+      --radius: 10px;
+      --sidebar-w: 240px;
     }
 
-    /* MODAL */
-    .overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem; }
-    .overlay.open { display:flex; }
-    .modal { background:var(--surface);border-radius:16px;width:100%;max-width:780px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2); }
-    .modal-header { padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
-    .modal-header h2 { font-size:1rem;font-weight:700; }
-    .btn-close { background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;border-radius:6px; }
-    .btn-close:hover { background:var(--bg); }
-    .btn-close svg { width:20px;height:20px; }
-    .modal-body { padding:1.5rem;overflow-y:auto;flex:1; }
-    .modal-footer { padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem;background:var(--surface);border-radius:0 0 16px 16px;flex-shrink:0; }
-    .form-group { margin-bottom:1.1rem; }
-    label { display:block;font-size:.8rem;font-weight:600;margin-bottom:.35rem; }
-    input[type=number], textarea { width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.9rem;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;font-family:inherit; }
-    input[type=number]:focus, textarea:focus { border-color:var(--brand); }
-    textarea { resize:vertical;min-height:70px; }
-    .factores-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem; }
-    .factor-item { display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:.78rem;transition:all .15s; }
-    .factor-item:hover { border-color:var(--brand);background:var(--brand-light); }
-    .factor-item.checked { border-color:var(--brand);background:var(--brand-light);color:var(--brand);font-weight:600; }
-    .factor-check { width:16px;height:16px;border:2px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-    .factor-item.checked .factor-check { background:var(--brand);border-color:var(--brand); }
-    .factor-item.checked .factor-check::after { content:'✓';color:#fff;font-size:.65rem; }
-    .resumen-box { background:#f8faf9;border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.75rem;display:grid;gap:.5rem; }
-    .rb-item .rb-label { font-size:.7rem;color:var(--muted); }
-    .rb-item .rb-value { font-size:.9rem;font-weight:700;color:var(--text); }
-    .alert-modal { background:#fdf0ee;border:1px solid #f5c6c0;border-radius:var(--radius);color:var(--danger);font-size:.82rem;padding:.6rem .85rem;margin-bottom:1rem;display:none; }
-    .alert-modal.show { display:block; }
-    .btn-cancel { padding:.55rem 1rem;background:none;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;color:var(--muted); }
-    .btn-cancel:hover { border-color:var(--text);color:var(--text); }
-    .btn-save { padding:.55rem 1.25rem;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .15s; }
-    .btn-save:hover:not(:disabled) { background:var(--brand-dark); }
-    .btn-save:disabled { opacity:.55;cursor:not-allowed; }
-    .spinner { width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none; }
-    .btn-save.loading .spinner { display:block; }
-    .btn-save.loading .save-text { display:none; }
-    @keyframes spin { to{transform:rotate(360deg);} }
-    .proy-table-wrap { margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem; }
-    .proy-table-title { font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem; }
-    .proy-table { width:100%;border-collapse:collapse;font-size:.82rem; }
-    .proy-table th { background:#f8faf9;padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border); }
-    .proy-table td { padding:.6rem .75rem;border-bottom:1px solid #f0f2f1; }
-    .proy-table tr:last-child td { border-bottom:none; }
-    .proy-empty { text-align:center;color:var(--muted);font-size:.82rem;padding:1rem; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       MAIN CONTENT
+       ============================================================ */
+    .main {
+      margin-left: var(--sidebar-w);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ============================================================
+       TOPBAR
+       ============================================================ */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.75rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar h1 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .topbar .date {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .topbar-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--text);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-hamburger svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* ============================================================
+       CONTENT
+       ============================================================ */
+    .content {
+      padding: 1.75rem;
+      flex: 1;
+    }
+
+    /* ============================================================
+       STATS
+       ============================================================ */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .stat-icon.green {
+      background: #e1f5ee;
+      color: #0f6e56;
+    }
+
+    .stat-icon.amber {
+      background: #faeeda;
+      color: #854f0b;
+    }
+
+    .stat-icon.blue {
+      background: #e6f1fb;
+      color: #185fa5;
+    }
+
+    .stat-icon.purple {
+      background: #eeedfe;
+      color: #534ab7;
+    }
+
+    .stat-info .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-info .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ============================================================
+       PANEL
+       ============================================================ */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .panel-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .panel-header .badge-count {
+      background: var(--brand-light);
+      color: var(--brand);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+    }
+
+    /* ============================================================
+       TABLA
+       ============================================================ */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead th {
+      background: #f8faf9;
+      padding: 0.65rem 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f0f2f1;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+    }
+
+    .empty {
+      padding: 2.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* ============================================================
+       BOTONES
+       ============================================================ */
+    .btn-proyectar {
+      padding: 0.35rem 0.85rem;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.15s;
+    }
+
+    .btn-proyectar:hover {
+      background: var(--brand-dark);
+    }
+
+    .btn-proyectar svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .btn-ver {
+      padding: 0.35rem 0.85rem;
+      background: none;
+      color: #185fa5;
+      border: 1.5px solid #185fa5;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 160px;
+      justify-content: center;
+    }
+
+    /* ============================================================
+       MODAL
+       ============================================================ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 780px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .modal-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      border-radius: 6px;
+    }
+
+    .btn-close:hover {
+      background: var(--bg);
+    }
+
+    .btn-close svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      background: var(--surface);
+      border-radius: 0 0 16px 16px;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       FORMULARIOS
+       ============================================================ */
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: var(--brand);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .factores-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .factor-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+    }
+
+    .factor-item:hover {
+      border-color: var(--brand);
+      background: var(--brand-light);
+    }
+
+    .factor-item.checked {
+      border-color: var(--brand);
+      background: var(--brand-light);
+      color: var(--brand);
+      font-weight: 600;
+    }
+
+    .factor-check {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .factor-item.checked .factor-check {
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+
+    .factor-item.checked .factor-check::after {
+      content: '✓';
+      color: #fff;
+      font-size: 0.65rem;
+    }
+
+    .resumen-box {
+      background: #f8faf9;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.75rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .rb-item .rb-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .rb-item .rb-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .alert-modal {
+      background: #fdf0ee;
+      border: 1px solid #f5c6c0;
+      border-radius: var(--radius);
+      color: var(--danger);
+      font-size: 0.82rem;
+      padding: 0.6rem 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .alert-modal.show {
+      display: block;
+    }
+
+    .btn-cancel {
+      padding: 0.55rem 1rem;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .btn-cancel:hover {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    .btn-save {
+      padding: 0.55rem 1.25rem;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.15s;
+    }
+
+    .btn-save:hover:not(:disabled) {
+      background: var(--brand-dark);
+    }
+
+    .btn-save:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .btn-save.loading .spinner {
+      display: block;
+    }
+
+    .btn-save.loading .save-text {
+      display: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ============================================================
+       PROYECCIONES TABLE
+       ============================================================ */
+    .proy-table-wrap {
+      margin-top: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+
+    .proy-table-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 0.6rem;
+    }
+
+    .proy-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .proy-table th {
+      background: #f8faf9;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .proy-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid #f0f2f1;
+    }
+
+    .proy-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .proy-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      padding: 1rem;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 768px) {
+      .main {
+        margin-left: 0 !important;
+      }
+
+      .topbar-hamburger {
+        display: flex;
+      }
+
+      .topbar {
+        padding: 0 1rem;
+        padding-left: 3.5rem !important;
+      }
+
+      .content {
+        padding: 1rem;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-info .value {
+        font-size: 1.3rem;
+      }
+
+      .panel {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 580px;
+      }
+
+      thead th:nth-child(4),
+      tbody td:nth-child(4),
+      thead th:nth-child(5),
+      tbody td:nth-child(5) {
+        display: none;
+      }
+
+      .btn-ver,
+      .btn-proyectar {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.72rem;
+        min-width: unset;
+      }
+
+      .modal {
+        border-radius: 12px;
+        margin: 0.5rem;
+      }
+
+      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+      }
+
+      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+      }
+
+      .factores-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+
+      .proy-table {
+        min-width: 480px;
+      }
+
+      .proy-table-wrap {
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <div class="icon">
-      <svg viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/></svg>
+  <!-- ============================================================
+  SIDEBAR (se carga automáticamente con sidebar.js)
+  ============================================================ -->
+
+  <!-- ============================================================
+  MAIN CONTENT
+  ============================================================ -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-hamburger" id="topbarHamburger" onclick="window.toggleSidebar()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <h1>Dashboard</h1>
+      </div>
+      <span class="date" id="fechaHoy"></span>
     </div>
-    <h2>Sistema Cosecha</h2>
-    <p>Proyección</p>
-  </div>
-  <nav class="nav">
-    <div class="nav-label">Principal</div>
-    <a href="dashboard.html" class="active">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Inicio
-    </a>
-    </nav>
-  <div class="sidebar-footer">
-    <div class="user-info">
-      <div class="avatar" id="avatarInitial">A</div>
-      <div class="info">
-        <div class="name" id="sidebarNombre"></div>
-        <div class="role" id="sidebarRol"></div>
-      </div>
-      <button class="btn-logout" onclick="logout()">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
-  </div>
-</aside>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display:none"></div>
 
-<main class="main">
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:.75rem;">
-      <button class="hamburger" id="btnHamburger" onclick="toggleSidebar()">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <h1>Dashboard</h1>
-    </div>
-    <span class="date" id="fechaHoy"></span>
-  </div>
-  <div class="content">
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-icon green"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
-        <div class="stat-info"><div class="value" id="statCosechas">—</div><div class="label">Cosechas activas</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon amber"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-        <div class="stat-info"><div class="value" id="statUsuarios">—</div><div class="label">Usuarios activos</div></div>
-      </div>
-     </div>
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- STATS -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="value" id="statCosechas">—</div>
+            <div class="label">Cosechas activas</div>
+          </div>
+        </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <h3>Cosechas activas</h3>
-        <span class="badge-count" id="countActivas">0</span>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Laguna</th>
-            <th>Sector</th>
-            <th>Fecha</th>
-            <th>Proyectado (lbs)</th>
-            <th>Peso planta (lb)</th>
-            <th>Proyecciones</th>
-            <th>Tu proyección</th>
-          </tr>
-        </thead>
-        <tbody id="tablaCosechasActivas">
-          <tr><td colspan="7" class="empty">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</main>
-
-<!-- MODAL PROYECCIÓN -->
-<div class="overlay" id="overlayProyeccion">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Registrar proyección</h2>
-      <button class="btn-close" onclick="cerrarModal()">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="alert-modal" id="alertProyeccion"></div>
-
-      <!-- Fila 1: Laguna / Sector / Fecha -->
-      <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr;">
-        <div class="rb-item"><div class="rb-label">Laguna</div><div class="rb-value" id="mpLaguna">—</div></div>
-        <div class="rb-item"><div class="rb-label">Sector</div><div class="rb-value" id="mpSector">—</div></div>
-        <div class="rb-item"><div class="rb-label">Fecha</div><div class="rb-value" id="mpFecha">—</div></div>
-      </div>
-
-      <!-- Fila 2: Indicadores -->
-      <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
-        <div class="rb-item"><div class="rb-label">Peso en informe (lb)</div><div class="rb-value" id="mpLbsInforme">—</div></div>
-        <div class="rb-item"><div class="rb-label">Peso en planta (lb)</div><div class="rb-value" id="mpPesoPlanta">—</div></div>
-        <div class="rb-item"><div class="rb-label">Tamaño de cosecha (g)</div><div class="rb-value" id="mpPesoGramo">—</div></div>
-        <div class="rb-item"><div class="rb-label">Área (Ha)</div><div class="rb-value" id="mpHa">—</div></div>
-        <div class="rb-item"><div class="rb-label" style="color:var(--brand)">Cam/m² informe</div><div class="rb-value" style="color:var(--brand)" id="mpCamM2Informe">—</div></div>
-      </div>
-
-      <div class="form-group">
-        <label>Libras proyectadas *</label>
-        <input type="number" id="mpLibras" placeholder="0.00" step="0.01" min="0" oninput="calcularCamM2()">
-        <div style="margin-top:.5rem;background:var(--brand-light);border:1px solid #b2dfd0;border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-size:.78rem;color:var(--brand);font-weight:600">Cam/m² según tu proyección</span>
-          <span style="font-size:1rem;font-weight:700;color:var(--brand)" id="mpCamM2Live">—</span>
+        <div class="stat-card">
+          <div class="stat-icon amber">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <div class="value" id="statUsuarios">—</div>
+            <div class="label">Usuarios activos</div>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Parámetros de decisión <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
-        <div class="factores-grid" id="factoresGrid">
-          <div style="color:var(--muted);font-size:.82rem">Cargando...</div>
+      <!-- TABLA DE COSECHAS -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Cosechas activas</h3>
+          <span class="badge-count" id="countActivas">0</span>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label>Comentario / Justificación</label>
-        <textarea id="mpComentario" placeholder="Explica el porqué de tu proyección..."></textarea>
-      </div>
-
-      <!-- PROYECCIONES REGISTRADAS -->
-      <div class="proy-table-wrap" id="otrasProy" style="display:none">
-        <div class="proy-table-title">Proyecciones registradas</div>
-        <table class="proy-table">
+        <table>
           <thead>
             <tr>
-              <th>N°</th>
-              <th>Usuario</th>
-              <th>Rol</th>
-              <th>Lbs proyectadas</th>
-              <th>% Variación</th>
-              <th>Parámetros</th>
-              <th>Comentario</th>
+              <th>Laguna</th>
+              <th>Sector</th>
+              <th>Fecha</th>
+              <th>Proyectado (lbs)</th>
+              <th>Peso planta (lb)</th>
+              <th>Proyecciones</th>
+              <th>Tu proyección</th>
             </tr>
           </thead>
-          <tbody id="tablaOtrasProy">
-            <tr><td colspan="7" class="proy-empty">Cargando...</td></tr>
+          <tbody id="tablaCosechasActivas">
+            <tr>
+              <td colspan="7" class="empty">Cargando...</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn-save" id="btnGuardarProyeccion" onclick="guardarProyeccion()">
-        <span class="save-text">Guardar proyección</span>
-        <span class="spinner"></span>
-      </button>
+  </main>
+
+  <!-- ============================================================
+  MODAL PROYECCIÓN
+  ============================================================ -->
+  <div class="overlay" id="overlayProyeccion">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Registrar proyección</h2>
+        <button class="btn-close" onclick="cerrarModal()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="alert-modal" id="alertProyeccion"></div>
+
+        <!-- Resumen: Laguna / Sector / Fecha -->
+        <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="rb-item">
+            <div class="rb-label">Laguna</div>
+            <div class="rb-value" id="mpLaguna">—</div>
+          </div>
+          <div class="rb-item">
+            <div class="rb-label">Sector</div>
+            <div class="rb-value" id="mpSector">—</div>
+          </div>
+          <div class="rb-item">
+            <div class="rb-label">Fecha</div>
+            <div class="rb-value" id="mpFecha">—</div>
+          </div>
+        </div>
+
+        <!-- Resumen: Indicadores -->
+        <div class="resumen-box" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
+          <div class="rb-item">
+            <div class="rb-label">Peso en informe (lb)</div>
+            <div class="rb-value" id="mpLbsInforme">—</div>
+          </div>
+          <div class="rb-item">
+            <div class="rb-label">Peso en planta (lb)</div>
+            <div class="rb-value" id="mpPesoPlanta">—</div>
+          </div>
+          <div class="rb-item">
+            <div class="rb-label">Tamaño de cosecha (g)</div>
+            <div class="rb-value" id="mpPesoGramo">—</div>
+          </div>
+          <div class="rb-item">
+            <div class="rb-label">Área (Ha)</div>
+            <div class="rb-value" id="mpHa">—</div>
+          </div>
+          <div class="rb-item">
+            <div class="rb-label" style="color:var(--brand)">Cam/m² informe</div>
+            <div class="rb-value" style="color:var(--brand)" id="mpCamM2Informe">—</div>
+          </div>
+        </div>
+
+        <!-- Libras proyectadas -->
+        <div class="form-group">
+          <label>Libras proyectadas *</label>
+          <input type="number" id="mpLibras" placeholder="0.00" step="0.01" min="0" oninput="calcularCamM2()">
+          <div style="margin-top:.5rem;background:var(--brand-light);border:1px solid #b2dfd0;border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:.78rem;color:var(--brand);font-weight:600">Cam/m² según tu proyección</span>
+            <span style="font-size:1rem;font-weight:700;color:var(--brand)" id="mpCamM2Live">—</span>
+          </div>
+        </div>
+
+        <!-- Parámetros de decisión -->
+        <div class="form-group">
+          <label>Parámetros de decisión <span style="font-size:.72rem;color:var(--muted);font-weight:400">(selecciona los que aplican)</span></label>
+          <div class="factores-grid" id="factoresGrid">
+            <div style="color:var(--muted);font-size:.82rem">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Comentario -->
+        <div class="form-group">
+          <label>Comentario / Justificación</label>
+          <textarea id="mpComentario" placeholder="Explica el porqué de tu proyección..."></textarea>
+        </div>
+
+        <!-- Proyecciones registradas -->
+        <div class="proy-table-wrap" id="otrasProy" style="display:none">
+          <div class="proy-table-title">Proyecciones registradas</div>
+          <table class="proy-table">
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Lbs proyectadas</th>
+                <th>% Variación</th>
+                <th>Parámetros</th>
+                <th>Comentario</th>
+              </tr>
+            </thead>
+            <tbody id="tablaOtrasProy">
+              <tr>
+                <td colspan="7" class="proy-empty">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn-save" id="btnGuardarProyeccion" onclick="guardarProyeccion()">
+          <span class="save-text">Guardar proyección</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-const API     = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
-const token   = localStorage.getItem('token');
-const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  <!-- ============================================================
+  SCRIPTS
+  ============================================================ -->
+  <!-- Primero el sidebar global -->
+  <script src="sidebar.js"></script>
 
-if (!token || !usuario) window.location.href = 'login.html';
+  <!-- Luego el script de la página -->
+  <script>
+    // ============================================================
+    // CONFIGURACIÓN
+    // ============================================================
+    const API = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+    const token = localStorage.getItem('token');
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
-document.getElementById('sidebarNombre').textContent = usuario?.nombre || '';
-document.getElementById('sidebarRol').textContent    = usuario?.rol    || '';
-document.getElementById('avatarInitial').textContent = (usuario?.nombre || 'A')[0].toUpperCase();
+    if (!token || !usuario) {
+      window.location.href = 'login.html';
+    }
 
-if (usuario?.rol !== 'Admin') {
-  document.getElementById('linkUsuarios')?.remove();
-}
+    // ============================================================
+    // FUNCIONES UTILITARIAS
+    // ============================================================
+    function fmt(n, d = 2) {
+      return n != null ? Number(n).toLocaleString('es-HN', {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d
+      }) : '—';
+    }
 
-const hoy = new Date().toLocaleDateString('es-HN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
-document.getElementById('fechaHoy').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
+    function authHeader() {
+      return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+    }
 
-function authHeader() {
-  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-}
-function logout() { localStorage.clear(); window.location.href = 'login.html'; }
-function fmt(n, d=2) { return n != null ? Number(n).toLocaleString('es-HN',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—'; }
+    // ============================================================
+    // FECHA ACTUAL
+    // ============================================================
+    const hoy = new Date().toLocaleDateString('es-HN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    document.getElementById('fechaHoy').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
 
-async function cargarStats() {
-  try {
-    const res  = await fetch(`${API}/dashboard/stats`, { headers: authHeader() });
-    const data = await res.json();
-    if (data.success) {
-      const el = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val ?? '0'; };
-      el('statCosechas',    data.data.cosechas_activas);
-      el('statLagunas',     data.data.lagunas_activas);
-      el('statSolicitudes', data.data.solicitudes_pendientes);
-      // Usuarios activos: usar el dato del stats si viene, sino llamada separada
-      if (data.data.usuarios_activos != null) {
-        el('statUsuarios', data.data.usuarios_activos);
-      } else {
+    // ============================================================
+    // CARGAR STATS
+    // ============================================================
+    async function cargarStats() {
+      try {
+        const res = await fetch(`${API}/dashboard/stats`, { headers: authHeader() });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('statCosechas').textContent = data.data.cosechas_activas || '0';
+
+          if (data.data.usuarios_activos != null) {
+            document.getElementById('statUsuarios').textContent = data.data.usuarios_activos;
+          } else {
+            cargarUsuariosActivos();
+          }
+        } else {
+          cargarUsuariosActivos();
+        }
+      } catch (e) {
         cargarUsuariosActivos();
       }
-    } else {
-      cargarUsuariosActivos();
-    }
-  } catch(e) {
-    cargarUsuariosActivos();
-  }
-}
-
-async function cargarUsuariosActivos() {
-  try {
-    const res  = await fetch(`${API}/usuarios`, { headers: authHeader() });
-    const data = await res.json();
-    if (data.success && Array.isArray(data.data)) {
-      // Contar activos (campo activo=1 o true); si no hay campo, cuenta todos
-      const activos = data.data.filter(u => u.activo === 1 || u.activo === true || u.activo == null).length;
-      const el = document.getElementById('statUsuarios');
-      if (el) el.textContent = activos;
-    }
-  } catch(e) {}
-}
-
-async function cargarCosechasActivas() {
-  try {
-    const res   = await fetch(`${API}/dashboard/cosechas-activas`, { headers: authHeader() });
-    const data  = await res.json();
-    const lista = data.success ? data.data : [];
-    document.getElementById('countActivas').textContent = lista.length;
-    const tbody = document.getElementById('tablaCosechasActivas');
-
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay cosechas activas</td></tr>';
-      return;
     }
 
-    window._cosechasActivas = {};
-    lista.forEach(c => window._cosechasActivas[c.id] = c);
+    async function cargarUsuariosActivos() {
+      try {
+        const res = await fetch(`${API}/usuarios`, { headers: authHeader() });
+        const data = await res.json();
 
-    tbody.innerHTML = lista.map(c => {
-      const yaProyecto = c.ya_proyecte > 0;
-      const btnHtml = yaProyecto
-        ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
-        : `<button class="btn-proyectar" onclick="abrirProyeccion(${c.id})">
-             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-             Proyectar
-           </button>`;
-      return `<tr>
-        <td style="font-weight:600">${c.laguna}</td>
-        <td>${c.sector}</td>
-        <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
-        <td>${fmt(c.cantidad_proyectada_lbs)}</td>
-        <td>${fmt(c.peso_planta_lb)}</td>
-        <td style="text-align:center">
-          <span style="background:var(--brand-light);color:var(--brand);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;font-weight:700">${c.total_proyecciones}</span>
-        </td>
-        <td>${btnHtml}</td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    document.getElementById('tablaCosechasActivas').innerHTML = '<tr><td colspan="7" class="empty">Error al cargar</td></tr>';
-  }
-}
-
-let factores = [];
-let cosechaActual = null;
-
-async function abrirProyeccion(cosechaId) {
-  cosechaActual = window._cosechasActivas[cosechaId] || window._cosechasActivas[parseInt(cosechaId)];
-  if (!cosechaActual) return;
-
-  document.getElementById('mpLaguna').textContent    = cosechaActual.laguna;
-  document.getElementById('mpSector').textContent    = cosechaActual.sector;
-  document.getElementById('mpFecha').textContent     = new Date(cosechaActual.fecha).toLocaleDateString('es-HN');
-  document.getElementById('mpLibras').value          = '';
-  document.getElementById('mpComentario').value      = '';
-  document.getElementById('mpCamM2Live').textContent = '—';
-  document.getElementById('alertProyeccion').classList.remove('show');
-
-  const lbs = cosechaActual.cantidad_proyectada_lbs;
-  const pp  = cosechaActual.peso_planta_lb;
-  const pg  = cosechaActual.peso_gramos_cosecha;
-  const ha  = cosechaActual.hectareas;
-
-  document.getElementById('mpLbsInforme').textContent  = lbs ? fmt(lbs) : '—';
-  document.getElementById('mpPesoPlanta').textContent  = pp  ? fmt(pp)  : '—';
-  document.getElementById('mpPesoGramo').textContent   = pg  ? fmt(pg)  : '—';
-  document.getElementById('mpHa').textContent          = ha  ? fmt(ha)  : '—';
-  const camInforme = (lbs && pg && ha) ? (lbs * 454.4 / pg / (ha * 10000)).toFixed(2) : null;
-  document.getElementById('mpCamM2Informe').textContent = camInforme ? fmt(Number(camInforme)) : '—';
-
-  await cargarFactores();
-
-  const yaProyecto = cosechaActual.ya_proyecte > 0;
-  const otrasProy  = document.getElementById('otrasProy');
-  const grpLibras  = document.getElementById('mpLibras').closest('.form-group');
-  const grpComment = document.getElementById('mpComentario').closest('.form-group');
-  const grpFactores= document.getElementById('factoresGrid').closest('.form-group');
-  const btnGuardar = document.getElementById('btnGuardarProyeccion');
-  const footer     = document.querySelector('.modal-footer');
-
-  if (yaProyecto) {
-    otrasProy.style.display   = 'block';
-    grpLibras.style.display   = 'none';
-    grpComment.style.display  = 'none';
-    grpFactores.style.display = 'none';
-    btnGuardar.style.display  = 'none';
-    footer.style.display      = 'none';
-    cargarProyeccionesCosecha(cosechaActual.id);
-  } else {
-    otrasProy.style.display   = 'none';
-    grpLibras.style.display   = 'block';
-    grpComment.style.display  = 'block';
-    grpFactores.style.display = 'block';
-    btnGuardar.style.display  = 'flex';
-    footer.style.display      = 'flex';
-  }
-
-  document.getElementById('overlayProyeccion').classList.add('open');
-}
-
-function calcularCamM2() {
-  if (!cosechaActual) return;
-  const lbs = parseFloat(document.getElementById('mpLibras').value);
-  const pg  = cosechaActual.peso_gramos_cosecha;
-  const ha  = cosechaActual.hectareas;
-  const el  = document.getElementById('mpCamM2Live');
-  if (lbs && pg && ha) {
-    el.textContent = fmt(lbs * 454.4 / pg / (ha * 10000));
-  } else {
-    el.textContent = '—';
-  }
-}
-
-function cerrarModal() {
-  document.getElementById('overlayProyeccion').classList.remove('open');
-  cosechaActual = null;
-}
-
-async function cargarFactores() {
-  if (factores.length) { renderFactores(); return; }
-  try {
-    const res  = await fetch(`${API}/proyecciones/factores`, { headers: authHeader() });
-    const data = await res.json();
-    factores   = data.success ? data.data : [];
-    renderFactores();
-  } catch(e) {}
-}
-
-function renderFactores() {
-  document.getElementById('factoresGrid').innerHTML = factores.map(f => `
-    <div class="factor-item" id="fi_${f.id}" onclick="this.classList.toggle('checked')">
-      <div class="factor-check"></div>
-      <span>${f.nombre}</span>
-    </div>
-  `).join('');
-}
-
-async function guardarProyeccion() {
-  const libras     = parseFloat(document.getElementById('mpLibras').value);
-  const comentario = document.getElementById('mpComentario').value.trim();
-  const factoresSeleccionados = [...document.querySelectorAll('.factor-item.checked')]
-    .map(el => parseInt(el.id.replace('fi_','')));
-  const alertEl = document.getElementById('alertProyeccion');
-  alertEl.classList.remove('show');
-
-  if (!libras || libras <= 0) {
-    alertEl.textContent = 'Ingresa las libras proyectadas.';
-    alertEl.classList.add('show');
-    return;
-  }
-
-  const btn = document.getElementById('btnGuardarProyeccion');
-  btn.disabled = true; btn.classList.add('loading');
-
-  try {
-    const res  = await fetch(`${API}/proyecciones`, {
-      method: 'POST', headers: authHeader(),
-      body: JSON.stringify({ cosecha_id: cosechaActual.id, libras_proyectadas: libras, comentario: comentario || null, factores: factoresSeleccionados }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      alertEl.textContent = data.message || 'Error al guardar.';
-      alertEl.classList.add('show');
-      return;
-    }
-    cerrarModal();
-    cargarCosechasActivas();
-    cargarStats();
-  } catch(e) {
-    alertEl.textContent = 'Error de conexión.';
-    alertEl.classList.add('show');
-  } finally {
-    btn.disabled = false; btn.classList.remove('loading');
-  }
-}
-
-async function cargarProyeccionesCosecha(cosechaId) {
-  const tbody = document.getElementById('tablaOtrasProy');
-  const pp    = cosechaActual ? cosechaActual.peso_planta_lb : null;
-  try {
-    const res  = await fetch(`${API}/proyecciones/cosecha/${cosechaId}`, { headers: authHeader() });
-    const data = await res.json();
-    if (!data.success || !data.data.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Sin proyecciones aún</td></tr>';
-      return;
-    }
-
-    // Ordenar por variación absoluta más cercana a 0
-    let lista = [...data.data];
-    if (pp) {
-      lista.sort((a, b) => {
-        const va = Math.abs((a.libras_proyectadas - pp) / pp * 100);
-        const vb = Math.abs((b.libras_proyectadas - pp) / pp * 100);
-        return va - vb;
-      });
-    }
-
-    tbody.innerHTML = lista.map((p, i) => {
-      const variacion = pp ? ((p.libras_proyectadas - pp) / pp * 100) : null;
-      let varColor = 'var(--muted)', varBg = 'transparent';
-      if (variacion !== null) {
-        const abs = Math.abs(variacion);
-        if (abs <= 5)       { varColor = '#0f6e56'; varBg = '#e1f5ee'; }
-        else if (abs <= 10) { varColor = '#854f0b'; varBg = '#faeeda'; }
-        else                { varColor = '#c0392b'; varBg = '#fdf0ee'; }
+        if (data.success && Array.isArray(data.data)) {
+          const activos = data.data.filter(u => u.activo === 1 || u.activo === true || u.activo == null).length;
+          document.getElementById('statUsuarios').textContent = activos;
+        }
+      } catch (e) {
+        // Si falla, mostrar guión
+        document.getElementById('statUsuarios').textContent = '—';
       }
-      const varStr = variacion !== null ? (variacion > 0 ? '+' : '') + variacion.toFixed(2) + '%' : '—';
-      const esMasCercano = pp && i === 0;
-return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
-        <td style="color:var(--muted);font-size:.78rem;font-weight:600">${i+1}</td>
-        <td style="font-weight:600"><div style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">${p.usuario}${esMasCercano ? '<span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;white-space:nowrap">↑ mayor precisión</span>' : ''}</div></td>
-        <td style="color:var(--muted)">${p.rol}</td>
-        <td style="font-weight:700;color:var(--brand)">${fmt(p.libras_proyectadas)}</td>
-        <td><span style="font-size:.78rem;font-weight:700;color:${varColor};background:${varBg};padding:.2rem .5rem;border-radius:6px;">${varStr}</span></td>
-        <td style="font-size:.75rem;color:var(--muted)">${p.parametros || '—'}</td>
-        <td style="font-size:.78rem">${p.comentario || '—'}</td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Error al cargar</td></tr>';
-  }
-}
+    }
 
-// ── Sidebar ──────────────────────────────────────────────
-const _sidebar  = document.querySelector('.sidebar');
-const _main     = document.querySelector('.main');
-const _overlay  = document.getElementById('sidebarOverlay');
+    // ============================================================
+    // CARGAR COSECHAS ACTIVAS
+    // ============================================================
+    let cosechasActivas = {};
 
-function isMobile() { return window.innerWidth <= 768; }
+    async function cargarCosechasActivas() {
+      try {
+        const res = await fetch(`${API}/dashboard/cosechas-activas`, { headers: authHeader() });
+        const data = await res.json();
+        const lista = data.success ? data.data : [];
 
-function initSidebar() {
-  if (isMobile()) {
-    _sidebar.style.transform  = 'translateX(-100%)';
-    _sidebar.style.transition = 'transform 0.25s ease';
-    _sidebar.style.zIndex     = '200';
-    _main.style.marginLeft    = '0';
-    _sidebar._mobileOpen = false;
-  } else {
-    _sidebar.style.transform = '';
-    _sidebar.style.zIndex    = '';
-    _main.style.marginLeft   = '';
-    _sidebar._mobileOpen = null;
-  }
-}
+        document.getElementById('countActivas').textContent = lista.length;
+        const tbody = document.getElementById('tablaCosechasActivas');
 
-function toggleSidebar() {
-  if (isMobile()) {
-    _sidebar._mobileOpen = !_sidebar._mobileOpen;
-    _sidebar.style.transform = _sidebar._mobileOpen ? 'translateX(0)' : 'translateX(-100%)';
-    _overlay.style.display   = _sidebar._mobileOpen ? 'block' : 'none';
-  } else {
-    const collapsed = _sidebar.classList.toggle('collapsed');
-    _main.classList.toggle('expanded', collapsed);
-  }
-}
+        if (!lista.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay cosechas activas</td></tr>';
+          return;
+        }
 
-initSidebar();
-window.addEventListener('resize', initSidebar);
-// ─────────────────────────────────────────────────────────
+        // Guardar en caché
+        cosechasActivas = {};
+        lista.forEach(c => cosechasActivas[c.id] = c);
 
-cargarStats();
-cargarCosechasActivas();
-</script>
+        tbody.innerHTML = lista.map(c => {
+          const yaProyecto = c.ya_proyecte > 0;
+          const btnHtml = yaProyecto
+            ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
+            : `<button class="btn-proyectar" onclick="abrirProyeccion(${c.id})">
+                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                   <line x1="12" y1="5" x2="12" y2="19"/>
+                   <line x1="5" y1="12" x2="19" y2="12"/>
+                 </svg>
+                 Proyectar
+               </button>`;
+
+          return `<tr>
+            <td style="font-weight:600">${c.laguna}</td>
+            <td>${c.sector}</td>
+            <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
+            <td>${fmt(c.cantidad_proyectada_lbs)}</td>
+            <td>${fmt(c.peso_planta_lb)}</td>
+            <td style="text-align:center">
+              <span style="background:var(--brand-light);color:var(--brand);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;font-weight:700">${c.total_proyecciones}</span>
+            </td>
+            <td>${btnHtml}</td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        document.getElementById('tablaCosechasActivas').innerHTML =
+          '<tr><td colspan="7" class="empty">Error al cargar las cosechas</td></tr>';
+      }
+    }
+
+    // ============================================================
+    // FACTORES (PARÁMETROS DE DECISIÓN)
+    // ============================================================
+    let factores = [];
+    let cosechaActual = null;
+
+    async function cargarFactores() {
+      if (factores.length) {
+        renderFactores();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/proyecciones/factores`, { headers: authHeader() });
+        const data = await res.json();
+        factores = data.success ? data.data : [];
+        renderFactores();
+      } catch (e) {
+        document.getElementById('factoresGrid').innerHTML =
+          '<div style="color:var(--muted);font-size:.82rem">Error al cargar factores</div>';
+      }
+    }
+
+    function renderFactores() {
+      document.getElementById('factoresGrid').innerHTML = factores.map(f => `
+        <div class="factor-item" id="fi_${f.id}" onclick="this.classList.toggle('checked')">
+          <div class="factor-check"></div>
+          <span>${f.nombre}</span>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // ABRIR MODAL DE PROYECCIÓN
+    // ============================================================
+    async function abrirProyeccion(cosechaId) {
+      cosechaActual = cosechasActivas[cosechaId] || cosechasActivas[parseInt(cosechaId)];
+      if (!cosechaActual) return;
+
+      // Resetear campos
+      document.getElementById('mpLibras').value = '';
+      document.getElementById('mpComentario').value = '';
+      document.getElementById('mpCamM2Live').textContent = '—';
+      document.getElementById('alertProyeccion').classList.remove('show');
+
+      // Llenar datos de la cosecha
+      document.getElementById('mpLaguna').textContent = cosechaActual.laguna;
+      document.getElementById('mpSector').textContent = cosechaActual.sector;
+      document.getElementById('mpFecha').textContent = new Date(cosechaActual.fecha).toLocaleDateString('es-HN');
+
+      const lbs = cosechaActual.cantidad_proyectada_lbs;
+      const pp = cosechaActual.peso_planta_lb;
+      const pg = cosechaActual.peso_gramos_cosecha;
+      const ha = cosechaActual.hectareas;
+
+      document.getElementById('mpLbsInforme').textContent = lbs ? fmt(lbs) : '—';
+      document.getElementById('mpPesoPlanta').textContent = pp ? fmt(pp) : '—';
+      document.getElementById('mpPesoGramo').textContent = pg ? fmt(pg) : '—';
+      document.getElementById('mpHa').textContent = ha ? fmt(ha) : '—';
+
+      const camInforme = (lbs && pg && ha) ? (lbs * 454.4 / pg / (ha * 10000)).toFixed(2) : null;
+      document.getElementById('mpCamM2Informe').textContent = camInforme ? fmt(Number(camInforme)) : '—';
+
+      // Cargar factores
+      await cargarFactores();
+
+      // Verificar si ya tiene proyección
+      const yaProyecto = cosechaActual.ya_proyecte > 0;
+      const otrasProy = document.getElementById('otrasProy');
+      const grpLibras = document.getElementById('mpLibras').closest('.form-group');
+      const grpComment = document.getElementById('mpComentario').closest('.form-group');
+      const grpFactores = document.getElementById('factoresGrid').closest('.form-group');
+      const btnGuardar = document.getElementById('btnGuardarProyeccion');
+      const footer = document.querySelector('.modal-footer');
+
+      if (yaProyecto) {
+        otrasProy.style.display = 'block';
+        grpLibras.style.display = 'none';
+        grpComment.style.display = 'none';
+        grpFactores.style.display = 'none';
+        btnGuardar.style.display = 'none';
+        footer.style.display = 'none';
+        cargarProyeccionesCosecha(cosechaActual.id);
+      } else {
+        otrasProy.style.display = 'none';
+        grpLibras.style.display = 'block';
+        grpComment.style.display = 'block';
+        grpFactores.style.display = 'block';
+        btnGuardar.style.display = 'flex';
+        footer.style.display = 'flex';
+      }
+
+      document.getElementById('overlayProyeccion').classList.add('open');
+    }
+
+    // ============================================================
+    // CALCULAR CAM/M² EN VIVO
+    // ============================================================
+    function calcularCamM2() {
+      if (!cosechaActual) return;
+
+      const lbs = parseFloat(document.getElementById('mpLibras').value);
+      const pg = cosechaActual.peso_gramos_cosecha;
+      const ha = cosechaActual.hectareas;
+      const el = document.getElementById('mpCamM2Live');
+
+      if (lbs && pg && ha) {
+        el.textContent = fmt(lbs * 454.4 / pg / (ha * 10000));
+      } else {
+        el.textContent = '—';
+      }
+    }
+
+    // ============================================================
+    // GUARDAR PROYECCIÓN
+    // ============================================================
+    async function guardarProyeccion() {
+      const libras = parseFloat(document.getElementById('mpLibras').value);
+      const comentario = document.getElementById('mpComentario').value.trim();
+      const factoresSeleccionados = [...document.querySelectorAll('.factor-item.checked')]
+        .map(el => parseInt(el.id.replace('fi_', '')));
+
+      const alertEl = document.getElementById('alertProyeccion');
+      alertEl.classList.remove('show');
+
+      if (!libras || libras <= 0) {
+        alertEl.textContent = 'Ingresa las libras proyectadas.';
+        alertEl.classList.add('show');
+        return;
+      }
+
+      const btn = document.getElementById('btnGuardarProyeccion');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const res = await fetch(`${API}/proyecciones`, {
+          method: 'POST',
+          headers: authHeader(),
+          body: JSON.stringify({
+            cosecha_id: cosechaActual.id,
+            libras_proyectadas: libras,
+            comentario: comentario || null,
+            factores: factoresSeleccionados
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          alertEl.textContent = data.message || 'Error al guardar la proyección.';
+          alertEl.classList.add('show');
+          return;
+        }
+
+        cerrarModal();
+        cargarCosechasActivas();
+        cargarStats();
+      } catch (e) {
+        alertEl.textContent = 'Error de conexión. Intenta nuevamente.';
+        alertEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+
+    // ============================================================
+    // CARGAR PROYECCIONES DE COSECHA
+    // ============================================================
+    async function cargarProyeccionesCosecha(cosechaId) {
+      const tbody = document.getElementById('tablaOtrasProy');
+      const pp = cosechaActual ? cosechaActual.peso_planta_lb : null;
+
+      try {
+        const res = await fetch(`${API}/proyecciones/cosecha/${cosechaId}`, { headers: authHeader() });
+        const data = await res.json();
+
+        if (!data.success || !data.data.length) {
+          tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Sin proyecciones aún</td></tr>';
+          return;
+        }
+
+        // Ordenar por variación absoluta más cercana a 0
+        let lista = [...data.data];
+        if (pp) {
+          lista.sort((a, b) => {
+            const va = Math.abs((a.libras_proyectadas - pp) / pp * 100);
+            const vb = Math.abs((b.libras_proyectadas - pp) / pp * 100);
+            return va - vb;
+          });
+        }
+
+        tbody.innerHTML = lista.map((p, i) => {
+          const variacion = pp ? ((p.libras_proyectadas - pp) / pp * 100) : null;
+          let varColor = 'var(--muted)';
+          let varBg = 'transparent';
+
+          if (variacion !== null) {
+            const abs = Math.abs(variacion);
+            if (abs <= 5) { varColor = '#0f6e56';
+              varBg = '#e1f5ee'; } else if (abs <= 10) { varColor = '#854f0b';
+              varBg = '#faeeda'; } else { varColor = '#c0392b';
+              varBg = '#fdf0ee'; }
+          }
+
+          const varStr = variacion !== null ? (variacion > 0 ? '+' : '') + variacion.toFixed(2) + '%' : '—';
+          const esMasCercano = pp && i === 0;
+
+          return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
+            <td style="color:var(--muted);font-size:.78rem;font-weight:600">${i + 1}</td>
+            <td style="font-weight:600">
+              <div style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">
+                ${p.usuario}
+                ${esMasCercano ? '<span style="font-size:.65rem;background:var(--brand);color:#fff;padding:.1rem .35rem;border-radius:10px;white-space:nowrap">↑ mayor precisión</span>' : ''}
+              </div>
+            </td>
+            <td style="color:var(--muted)">${p.rol}</td>
+            <td style="font-weight:700;color:var(--brand)">${fmt(p.libras_proyectadas)}</td>
+            <td><span style="font-size:.78rem;font-weight:700;color:${varColor};background:${varBg};padding:.2rem .5rem;border-radius:6px;">${varStr}</span></td>
+            <td style="font-size:.75rem;color:var(--muted)">${p.parametros || '—'}</td>
+            <td style="font-size:.78rem">${p.comentario || '—'}</td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" class="proy-empty">Error al cargar proyecciones</td></tr>';
+      }
+    }
+
+    // ============================================================
+    // CERRAR MODAL
+    // ============================================================
+    function cerrarModal() {
+      document.getElementById('overlayProyeccion').classList.remove('open');
+      cosechaActual = null;
+    }
+
+    // ============================================================
+    // INICIALIZAR
+    // ============================================================
+    cargarStats();
+    cargarCosechasActivas();
+
+    // Exponer funciones globalmente
+    window.abrirProyeccion = abrirProyeccion;
+    window.guardarProyeccion = guardarProyeccion;
+    window.cerrarModal = cerrarModal;
+    window.calcularCamM2 = calcularCamM2;
+
+    console.log('✅ Dashboard cargado correctamente');
+  </script>
+
 </body>
 </html>
