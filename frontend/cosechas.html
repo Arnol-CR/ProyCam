@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosechas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:#0f6e56; --brand-dark:#085041; --brand-light:#e1f5ee;
+      --bg:#f0f2f1; --surface:#fff; --border:#dde2e0;
+      --text:#1a2e28; --muted:#5f7570; --danger:#c0392b;
+      --radius:10px; --sidebar-w:240px;
+    }
+    body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+
+    /* SIDEBAR */
+    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; }
+    .sidebar-brand { padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,.1); }
+    .sidebar-brand .icon { width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem; }
+    .sidebar-brand .icon svg { width:20px;height:20px;fill:#fff; }
+    .sidebar-brand h2 { color:#fff;font-size:.95rem;font-weight:700; }
+    .sidebar-brand p  { color:rgba(255,255,255,.5);font-size:.72rem;margin-top:.1rem; }
+    .nav { flex:1;padding:.75rem 0;overflow-y:auto; }
+    .nav-label { color:rgba(255,255,255,.35);font-size:.67rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.9rem 1.2rem .3rem; }
+    .nav a { display:flex;align-items:center;gap:.65rem;padding:.55rem 1.2rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:background .15s,color .15s; }
+    .nav a:hover { background:rgba(255,255,255,.07);color:#fff; }
+    .nav a.active { background:rgba(255,255,255,.12);color:#fff;border-left-color:#5DCAA5; }
+    .nav a svg { width:18px;height:18px;flex-shrink:0; }
+    .sidebar-footer { padding:.9rem 1.2rem;border-top:1px solid rgba(255,255,255,.1); }
+    .user-info { display:flex;align-items:center;gap:.6rem; }
+    .avatar { width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;font-weight:700;flex-shrink:0; }
+    .user-info .info { flex:1;min-width:0; }
+    .user-info .name { color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .user-info .role { color:rgba(255,255,255,.45);font-size:.7rem; }
+    .btn-logout { background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);padding:4px;display:flex;align-items:center; }
+    .btn-logout:hover { color:#fff; }
+    .btn-logout svg { width:16px;height:16px; }
+
+    /* MAIN */
+    .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column; }
+    .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
+    .topbar h1 { font-size:1rem;font-weight:600; }
+    .btn-primary { padding:.5rem 1rem;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-size:.85rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;transition:background .15s; }
+    .btn-primary:hover { background:var(--brand-dark); }
+    .btn-primary svg { width:16px;height:16px; }
+    .content { padding:1.75rem; }
+
+    /* FILTROS */
+    .filters { display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap; }
+    .filters select, .filters input { padding:.45rem .75rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.85rem;color:var(--text);background:var(--surface);outline:none; }
+    .filters select:focus, .filters input:focus { border-color:var(--brand); }
+
+    /* TABLA */
+    .panel { background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%;border-collapse:collapse;font-size:.85rem; }
+    thead th { background:#f8faf9;padding:.65rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border); }
+    tbody tr { border-bottom:1px solid #f0f2f1;transition:background .1s; }
+    tbody tr:hover { background:#f8faf9; }
+    tbody td { padding:.75rem 1rem; }
+    tbody tr:last-child { border-bottom:none; }
+    .badge { display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600; }
+    .badge.abierta  { background:#e1f5ee;color:#0f6e56; }
+    .badge.cerrada  { background:#f1eff8;color:#534ab7; }
+    .badge.cancelada { background:#fdf0ee;color:#c0392b; }
+    .empty { padding:3rem;text-align:center;color:var(--muted);font-size:.85rem; }
+    .btn-icon { background:none;border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;transition:all .15s; }
+    .btn-icon:hover { border-color:var(--brand);color:var(--brand); }
+    .btn-icon svg { width:15px;height:15px; }
+
+    /* MODAL OVERLAY */
+    .overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto; }
+    .overlay.open { display:flex; }
+
+    .modal { background:var(--surface);border-radius:16px;width:100%;max-width:780px;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;margin:auto; }
+    .modal-header { padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+    .modal-header h2 { font-size:1rem;font-weight:700; }
+    .btn-close { background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;border-radius:6px; }
+    .btn-close:hover { background:var(--bg);color:var(--text); }
+    .btn-close svg { width:20px;height:20px; }
+
+    .modal-body { display:grid;grid-template-columns:1fr 1fr;gap:0; }
+
+    /* FORMULARIO */
+    .form-side { padding:1.5rem;border-right:1px solid var(--border); }
+    .form-group { margin-bottom:1rem; }
+    label { display:block;font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.35rem; }
+    input, select, textarea {
+      width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);
+      border-radius:var(--radius);font-size:.9rem;color:var(--text);
+      background:var(--surface);outline:none;transition:border-color .2s;
+      font-family:inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--brand); }
+    textarea { resize:vertical;min-height:72px; }
+    .form-row { display:grid;grid-template-columns:1fr 1fr;gap:.75rem; }
+    .field-hint { font-size:.72rem;color:var(--muted);margin-top:.25rem; }
+
+    /* PREVIEW */
+    .preview-side { padding:1.5rem;background:#f8faf9; }
+    .preview-side h3 { font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem; }
+    .preview-card { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem;margin-bottom:.75rem; }
+    .preview-card .pc-label { font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.15rem; }
+    .preview-card .pc-value { font-size:1.1rem;font-weight:700;color:var(--text); }
+    .preview-card .pc-sub   { font-size:.78rem;color:var(--muted);margin-top:.1rem; }
+    .preview-grid { display:grid;grid-template-columns:1fr 1fr;gap:.6rem; }
+    .preview-item { background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem; }
+    .preview-item .pi-label { font-size:.7rem;color:var(--muted);font-weight:600;margin-bottom:.15rem; }
+    .preview-item .pi-value { font-size:.95rem;font-weight:700;color:var(--text); }
+    .empty-preview { text-align:center;color:var(--muted);font-size:.82rem;padding:2rem 0; }
+
+    .modal-footer { padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem; }
+    .btn-cancel { padding:.55rem 1rem;background:none;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;color:var(--muted); }
+    .btn-cancel:hover { border-color:var(--text);color:var(--text); }
+    .btn-save { padding:.55rem 1.25rem;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-size:.875rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .15s; }
+    .btn-save:hover:not(:disabled) { background:var(--brand-dark); }
+    .btn-save:disabled { opacity:.55;cursor:not-allowed; }
+    .spinner { width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none; }
+    .btn-save.loading .spinner { display:block; }
+    .btn-save.loading .save-text { display:none; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    .alert-modal { background:#fdf0ee;border:1px solid #f5c6c0;border-radius:var(--radius);color:var(--danger);font-size:.82rem;padding:.6rem .85rem;margin-bottom:1rem;display:none; }
+    .alert-modal.show { display:block; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/></svg>
+    </div>
+    <h2>Sistema Cosecha</h2>
+    <p>Pronóstico de camarón</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Principal</div>
+    <a href="dashboard.html">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="cosechas.html" class="active">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      Cosechas
+    </a>
+    <a href="lagunas.html">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      Lagunas
+    </a>
+    <div class="nav-label">Administración</div>
+    <a href="usuarios.html">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Usuarios
+    </a>
+    <a href="sectores.html">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Sectores
+    </a>
+    <a href="solicitudes.html">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      Solicitudes
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar" id="avatarInitial">A</div>
+      <div class="info">
+        <div class="name" id="sidebarNombre"></div>
+        <div class="role" id="sidebarRol"></div>
+      </div>
+      <button class="btn-logout" onclick="logout()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <h1>Cosechas</h1>
+    <button class="btn-primary" onclick="abrirModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva cosecha
+    </button>
+  </div>
+
+  <div class="content">
+    <div class="filters">
+      <select id="filtroEstado" onchange="cargarCosechas()">
+        <option value="">Todos los estados</option>
+        <option value="abierta">Abierta</option>
+        <option value="cerrada">Cerrada</option>
+        <option value="cancelada">Cancelada</option>
+      </select>
+      <input type="text" id="filtroBuscar" placeholder="Buscar laguna o sector..." oninput="filtrarTabla()">
+    </div>
+
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Laguna</th>
+              <th>Sector</th>
+              <th>Fecha</th>
+              <th>Proyectado (lbs)</th>
+              <th>Peso planta (lb)</th>
+              <th>Proyecciones</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tablaCosechas">
+            <tr><td colspan="9" class="empty">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL CREAR COSECHA -->
+<div class="overlay" id="overlay" onclick="cerrarSiOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nueva cosecha</h2>
+      <button class="btn-close" onclick="cerrarModal()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- FORMULARIO -->
+      <div class="form-side">
+        <div class="alert-modal" id="alertModal"></div>
+
+        <div class="form-group">
+          <label>Sector *</label>
+          <select id="fSector" onchange="cargarLagunasPorSector()">
+            <option value="">Selecciona un sector...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Laguna *</label>
+          <select id="fLaguna" onchange="actualizarPreview()" disabled>
+            <option value="">Primero selecciona un sector...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Fecha de cosecha *</label>
+          <input type="date" id="fFecha" onchange="actualizarPreview()">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cant. proyectada (lbs)</label>
+            <input type="number" id="fCantidad" placeholder="0.00" step="0.01" min="0" oninput="actualizarPreview()">
+            <div class="field-hint">Según informe</div>
+          </div>
+          <div class="form-group">
+            <label>Peso planta (lb)</label>
+            <input type="number" id="fPesoPlanta" placeholder="0.000" step="0.001" min="0" oninput="actualizarPreview()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Peso gramos cosecha</label>
+          <input type="number" id="fPesoGramos" placeholder="0.000" step="0.001" min="0" oninput="actualizarPreview()">
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones</label>
+          <textarea id="fObservaciones" placeholder="Notas adicionales..."></textarea>
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div class="preview-side">
+        <h3>Vista previa</h3>
+        <div id="previewContent">
+          <div class="empty-preview">Completa el formulario para ver la vista previa</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" id="btnGuardar" onclick="guardarCosecha()">
+        <span class="save-text">Guardar cosecha</span>
+        <span class="spinner"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API     = 'http://localhost:3000/api';
+const token   = localStorage.getItem('token');
+const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+
+if (!token || !usuario) window.location.href = 'login.html';
+
+document.getElementById('sidebarNombre').textContent = usuario?.nombre || '';
+document.getElementById('sidebarRol').textContent    = usuario?.rol    || '';
+document.getElementById('avatarInitial').textContent = (usuario?.nombre || 'A')[0].toUpperCase();
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+// ── TABLA ──
+let todasCosechas = [];
+
+async function cargarCosechas() {
+  const estado = document.getElementById('filtroEstado').value;
+  const url    = `${API}/cosechas${estado ? '?estado=' + estado : ''}`;
+  try {
+    const res  = await fetch(url, { headers: authHeader() });
+    const data = await res.json();
+    todasCosechas = data.success ? data.data : [];
+    renderTabla(todasCosechas);
+  } catch (e) {
+    document.getElementById('tablaCosechas').innerHTML = '<tr><td colspan="9" class="empty">Error al cargar cosechas</td></tr>';
+  }
+}
+
+function filtrarTabla() {
+  const q = document.getElementById('filtroBuscar').value.toLowerCase();
+  const filtradas = todasCosechas.filter(c =>
+    c.laguna.toLowerCase().includes(q) || c.sector.toLowerCase().includes(q)
+  );
+  renderTabla(filtradas);
+}
+
+function renderTabla(lista) {
+  const tbody = document.getElementById('tablaCosechas');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Sin cosechas registradas</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(c => `
+    <tr>
+      <td style="color:var(--muted);font-size:.78rem">#${c.id}</td>
+      <td style="font-weight:600">${c.laguna}</td>
+      <td>${c.sector}</td>
+      <td>${new Date(c.fecha).toLocaleDateString('es-HN')}</td>
+      <td>${c.cantidad_proyectada_lbs ? Number(c.cantidad_proyectada_lbs).toLocaleString('es-HN', {minimumFractionDigits:2}) : '—'}</td>
+      <td>${c.peso_planta_lb ? Number(c.peso_planta_lb).toFixed(3) : '—'}</td>
+      <td style="text-align:center">
+        <span style="background:var(--brand-light);color:var(--brand);padding:.15rem .5rem;border-radius:20px;font-size:.75rem;font-weight:700">
+          ${c.total_proyecciones}
+        </span>
+      </td>
+      <td><span class="badge ${c.estado}">${c.estado}</span></td>
+      <td>
+        <button class="btn-icon" onclick="verDetalle(${c.id})" title="Ver detalle">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── MODAL ──
+let lagunas = [];
+
+async function abrirModal() {
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  await cargarSectores();
+  document.getElementById('fFecha').value = new Date().toISOString().split('T')[0];
+  actualizarPreview();
+}
+
+function cerrarModal() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  resetForm();
+}
+
+function cerrarSiOverlay(e) {
+  if (e.target === document.getElementById('overlay')) cerrarModal();
+}
+
+function resetForm() {
+  ['fSector','fLaguna','fFecha','fCantidad','fPesoPlanta','fPesoGramos','fObservaciones'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const selLaguna = document.getElementById('fLaguna');
+  selLaguna.innerHTML = '<option value="">Primero selecciona un sector...</option>';
+  selLaguna.disabled  = true;
+  document.getElementById('alertModal').classList.remove('show');
+  actualizarPreview();
+}
+
+let sectores = [];
+
+async function cargarSectores() {
+  if (sectores.length) return;
+  try {
+    const res  = await fetch(`${API}/sectores`, { headers: authHeader() });
+    const data = await res.json();
+    sectores   = data.success ? data.data : [];
+    const sel  = document.getElementById('fSector');
+    sel.innerHTML = '<option value="">Selecciona un sector...</option>' +
+      sectores.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+  } catch (e) {}
+}
+
+async function cargarLagunasPorSector() {
+  const sector_id = document.getElementById('fSector').value;
+  const selLaguna = document.getElementById('fLaguna');
+  selLaguna.innerHTML = '<option value="">Cargando...</option>';
+  selLaguna.disabled  = true;
+  lagunas = [];
+  actualizarPreview();
+
+  if (!sector_id) {
+    selLaguna.innerHTML = '<option value="">Primero selecciona un sector...</option>';
+    return;
+  }
+
+  try {
+    const res  = await fetch(`${API}/lagunas?sector_id=${sector_id}`, { headers: authHeader() });
+    const data = await res.json();
+    lagunas    = data.success ? data.data : [];
+    selLaguna.disabled = false;
+    selLaguna.innerHTML = '<option value="">Selecciona una laguna...</option>' +
+      lagunas.map(l => `<option value="${l.id}" data-sector="${l.sector}" data-ha="${l.hectareas}">${l.nombre} (${l.hectareas} ha)</option>`).join('');
+    if (!lagunas.length) {
+      selLaguna.innerHTML = '<option value="">Sin lagunas en este sector</option>';
+      selLaguna.disabled = true;
+    }
+  } catch (e) {
+    selLaguna.innerHTML = '<option value="">Error al cargar lagunas</option>';
+  }
+}
+
+// ── PREVIEW EN TIEMPO REAL ──
+function actualizarPreview() {
+  const lagunaId  = document.getElementById('fLaguna').value;
+  const fecha     = document.getElementById('fFecha').value;
+  const cantidad  = parseFloat(document.getElementById('fCantidad').value)    || null;
+  const pesoPlanta= parseFloat(document.getElementById('fPesoPlanta').value)  || null;
+  const pesoGramos= parseFloat(document.getElementById('fPesoGramos').value)  || null;
+
+  const container = document.getElementById('previewContent');
+
+  if (!lagunaId && !fecha) {
+    container.innerHTML = '<div class="empty-preview">Completa el formulario para ver la vista previa</div>';
+    return;
+  }
+
+  // datos de la laguna seleccionada
+  const opt    = document.querySelector(`#fLaguna option[value="${lagunaId}"]`);
+  const sector = opt ? opt.dataset.sector : '—';
+  const ha     = opt ? parseFloat(opt.dataset.ha) : null;
+
+  // calcular lbs/hectárea si hay datos
+  const lbsHa = (cantidad && ha) ? (cantidad / ha).toFixed(1) : null;
+
+  const fechaStr = fecha ? new Date(fecha + 'T00:00:00').toLocaleDateString('es-HN', {day:'2-digit', month:'long', year:'numeric'}) : '—';
+
+  container.innerHTML = `
+    <div class="preview-card">
+      <div class="pc-label">Laguna</div>
+      <div class="pc-value">${opt ? opt.text.split(' — ')[0] : '—'}</div>
+      <div class="pc-sub">Sector: ${sector}${ha ? ' · ' + ha + ' ha' : ''}</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="pc-label">Fecha de cosecha</div>
+      <div class="pc-value">${fechaStr}</div>
+    </div>
+
+    <div class="preview-grid">
+      <div class="preview-item">
+        <div class="pi-label">Cant. proyectada</div>
+        <div class="pi-value">${cantidad ? cantidad.toLocaleString('es-HN', {minimumFractionDigits:2}) + ' lbs' : '—'}</div>
+      </div>
+      <div class="preview-item">
+        <div class="pi-label">Lbs / hectárea</div>
+        <div class="pi-value" style="color:${lbsHa ? 'var(--brand)' : 'var(--muted)'}">${lbsHa ? lbsHa : '—'}</div>
+      </div>
+      <div class="preview-item">
+        <div class="pi-label">Peso planta</div>
+        <div class="pi-value">${pesoPlanta ? pesoPlanta.toFixed(3) + ' lb' : '—'}</div>
+      </div>
+      <div class="preview-item">
+        <div class="pi-label">Peso gramos</div>
+        <div class="pi-value">${pesoGramos ? pesoGramos.toFixed(3) + ' g' : '—'}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── GUARDAR ──
+async function guardarCosecha() {
+  const laguna_id              = document.getElementById('fLaguna').value;
+  const fecha                  = document.getElementById('fFecha').value;
+  const cantidad_proyectada_lbs= document.getElementById('fCantidad').value    || null;
+  const peso_planta_lb         = document.getElementById('fPesoPlanta').value  || null;
+  const peso_gramos_cosecha    = document.getElementById('fPesoGramos').value  || null;
+  const observaciones          = document.getElementById('fObservaciones').value || null;
+
+  const alertEl = document.getElementById('alertModal');
+  alertEl.classList.remove('show');
+
+  if (!laguna_id || !fecha) {
+    alertEl.textContent = 'Laguna y fecha son requeridos.';
+    alertEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('btnGuardar');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  try {
+    const res  = await fetch(`${API}/cosechas`, {
+      method:  'POST',
+      headers: authHeader(),
+      body:    JSON.stringify({ laguna_id, fecha, cantidad_proyectada_lbs, peso_planta_lb, peso_gramos_cosecha, observaciones }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alertEl.textContent = data.message || 'Error al guardar.';
+      alertEl.classList.add('show');
+      return;
+    }
+
+    cerrarModal();
+    cargarCosechas();
+
+  } catch (e) {
+    alertEl.textContent = 'No se pudo conectar con el servidor.';
+    alertEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+function verDetalle(id) {
+  window.location.href = `cosecha-detalle.html?id=${id}`;
+}
+
+// Inicializar
+cargarCosechas();
+</script>
+</body>
+</html>

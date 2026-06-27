@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:      #0f6e56;
+      --brand-dark: #085041;
+      --brand-light:#e1f5ee;
+      --bg:         #f4f6f5;
+      --surface:    #ffffff;
+      --border:     #d8dedd;
+      --text:       #1a2e28;
+      --muted:      #5f7570;
+      --danger:     #c0392b;
+      --radius:     10px;
+      --shadow:     0 4px 24px rgba(15,110,86,.10);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 2.5rem 2.25rem;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .brand-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--brand-light);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+    }
+
+    .brand-icon svg {
+      width: 30px;
+      height: 30px;
+      fill: var(--brand);
+    }
+
+    .brand h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.3px;
+    }
+
+    .brand p {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: .25rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+
+    label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: .4rem;
+      letter-spacing: .2px;
+    }
+
+    input {
+      width: 100%;
+      padding: .65rem .9rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input:focus {
+      border-color: var(--brand);
+    }
+
+    input.error {
+      border-color: var(--danger);
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .toggle-pass {
+      position: absolute;
+      right: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-pass:hover { color: var(--text); }
+
+    .alert {
+      background: #fdf0ee;
+      border: 1px solid #f5c6c0;
+      border-radius: var(--radius);
+      color: var(--danger);
+      font-size: .85rem;
+      padding: .65rem .9rem;
+      margin-bottom: 1.1rem;
+      display: none;
+    }
+
+    .alert.show { display: block; }
+
+    .btn {
+      width: 100%;
+      padding: .75rem;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: background .2s, opacity .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+    }
+
+    .btn:hover:not(:disabled) { background: var(--brand-dark); }
+    .btn:disabled { opacity: .65; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+
+    .btn.loading .spinner { display: block; }
+    .btn.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand">
+    <div class="brand-icon">
+      <!-- Ícono camarón / ola -->
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.6 3.8C5.8 12 5 13.9 5 16c0 3.3 2.7 6 6 6 1.8 0 3.4-.8 4.5-2 .6.1 1.3.2 2 .2 1.7 0 3.2-.5 4.5-1.4l-1.4-1.4c-.9.6-2 .9-3.1.9-.3 0-.6 0-.9-.1C17.5 17.4 18 16.2 18 15c0-2.2-1.4-4.1-3.4-4.8C15.4 9.3 16 8.2 16 7c0-2.8-1.8-5-4-5zm0 2c1.1 0 2 1.3 2 3s-.9 3-2 3-2-1.3-2-3 .9-3 2-3zm0 8c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4z"/>
+      </svg>
+    </div>
+    <h1>Sistema de Cosecha</h1>
+    <p>Pronóstico de producción de camarón</p>
+  </div>
+
+  <div class="alert" id="alert"></div>
+
+  <form id="loginForm" novalidate>
+    <div class="form-group">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" placeholder="usuario@empresa.com" autocomplete="email" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Contraseña</label>
+      <div class="input-wrap">
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+        <button type="button" class="toggle-pass" onclick="togglePassword()" title="Mostrar/ocultar contraseña">
+          <svg id="eyeIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn" id="btnLogin">
+      <span class="btn-text">Iniciar sesión</span>
+      <span class="spinner"></span>
+    </button>
+  </form>
+
+  <div class="footer">Sistema de gestión de producción acuícola</div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api';
+
+  function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function showAlert(msg) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideAlert() {
+    document.getElementById('alert').classList.remove('show');
+  }
+
+  function setLoading(state) {
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = state;
+    btn.classList.toggle('loading', state);
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      showAlert('Por favor completa todos los campos.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res  = await fetch(`${API}/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        showAlert(data.message || 'Error al iniciar sesión.');
+        return;
+      }
+
+      // Guardar token y datos de sesión
+      localStorage.setItem('token',   data.data.token);
+      localStorage.setItem('usuario', JSON.stringify(data.data.usuario));
+
+      // Redirigir según rol
+      const rol = data.data.usuario.rol;
+      if (rol === 'Admin') {
+        window.location.href = 'dashboard.html';
+      } else {
+        window.location.href = 'inicio.html';
+      }
+
+    } catch (err) {
+      showAlert('No se pudo conectar con el servidor. Verifica tu conexión.');
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+
+</body>
+</html>
