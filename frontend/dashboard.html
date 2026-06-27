@@ -235,10 +235,6 @@ const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
 if (!token || !usuario) window.location.href = 'login.html';
 
-document.getElementById('sidebarNombre').textContent = usuario?.nombre || '';
-document.getElementById('sidebarRol').textContent    = usuario?.rol    || '';
-document.getElementById('avatarInitial').textContent = (usuario?.nombre || 'A')[0].toUpperCase();
-
 if (usuario?.rol !== 'Admin') {
   document.getElementById('linkUsuarios')?.remove();
 }
