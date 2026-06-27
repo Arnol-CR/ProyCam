@@ -109,6 +109,18 @@
     .proy-table td { padding:.6rem .75rem;border-bottom:1px solid #f0f2f1; }
     .proy-table tr:last-child td { border-bottom:none; }
     .proy-empty { text-align:center;color:var(--muted);font-size:.82rem;padding:1rem; }
+  
+    @media (max-width: 768px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      thead th:nth-child(3),
+      thead th:nth-child(5),
+      tbody td:nth-child(3),
+      tbody td:nth-child(5) { display:none; }
+      table { font-size:.78rem; }
+      tbody td { padding:.6rem .5rem; }
+      .btn-ver, .btn-proyectar { padding:.3rem .5rem;font-size:.72rem;min-width:unset; }
+    }
+
   </style>
 </head>
 html<body>
@@ -154,9 +166,6 @@ html<body>
         </tbody>
       </table>
     </div>
-
-    <!-- TARJETAS MÓVIL -->
-    <div class="cosecha-cards" id="cosechaCards"></div>
 
   </div>
 </main>
@@ -277,40 +286,7 @@ async function cargarCosechasActivas() {
     window._cosechasActivas = {};
     lista.forEach(c => window._cosechasActivas[c.id] = c);
 
-    // Tarjetas móvil
-    const cards = document.getElementById('cosechaCards');
-    if (cards) {
-      cards.innerHTML = lista.map(c => {
-        const yaProyecto = c.ya_proyecte > 0;
-        const btnHtml = yaProyecto
-          ? `<button class="cosecha-card-btn ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
-          : `<button class="cosecha-card-btn" onclick="abrirProyeccion(${c.id})">+ Proyectar</button>`;
-        return `<div class="cosecha-card">
-          <div class="cosecha-card-top">
-            <div>
-              <div class="cosecha-card-laguna">${c.laguna}</div>
-              <div class="cosecha-card-sector">${c.sector}</div>
-            </div>
-            <div class="cosecha-card-fecha">${new Date(c.fecha).toLocaleDateString('es-HN')}</div>
-          </div>
-          <div class="cosecha-card-row">
-            <span class="cosecha-card-label">Proyectado</span>
-            <span class="cosecha-card-value">${fmt(c.cantidad_proyectada_lbs)} lbs</span>
-          </div>
-          <div class="cosecha-card-row">
-            <span class="cosecha-card-label">Peso planta</span>
-            <span class="cosecha-card-value">${fmt(c.peso_planta_lb)} lb</span>
-          </div>
-          <div class="cosecha-card-row">
-            <span class="cosecha-card-label">Proyecciones</span>
-            <span class="cosecha-card-value" style="color:var(--brand)">${c.total_proyecciones}</span>
-          </div>
-          ${btnHtml}
-        </div>`;
-      }).join('');
-    }
-
-    tbody.innerHTML = lista.map(c => {
+        tbody.innerHTML = lista.map(c => {
       const yaProyecto = c.ya_proyecte > 0;
       const btnHtml = yaProyecto
         ? `<button class="btn-ver" onclick="abrirProyeccion(${c.id})">Ver proyecciones</button>`
@@ -518,6 +494,5 @@ async function cargarProyeccionesCosecha(cosechaId) {
 cargarStats();
 cargarCosechasActivas();
 </script>
-<script src="sidebar.js"></script>
 </body>
 </html>
