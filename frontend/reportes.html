@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes - Sistema Cosecha</title>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --brand:#0f6e56; --brand-dark:#085041; --brand-light:#e1f5ee;
+      --bg:#f0f2f1; --surface:#fff; --border:#dde2e0;
+      --text:#1a2e28; --muted:#5f7570;
+      --radius:10px; --sidebar-w:240px;
+    }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+
+    .main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; }
+    .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 1.75rem; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+    .topbar h1 { font-size:1rem; font-weight:600; }
+    .topbar .date { font-size:.8rem; color:var(--muted); }
+    .content { padding:1.75rem; }
+
+    /* RESUMEN CARDS */
+    .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.75rem; }
+    .sum-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:.25rem; }
+    .sum-card .sc-label { font-size:.72rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+    .sum-card .sc-value { font-size:1.5rem; font-weight:700; color:var(--text); }
+    .sum-card .sc-sub { font-size:.75rem; color:var(--muted); }
+
+    /* TABLA RANKING */
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    .panel-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .panel-header h2 { font-size:.95rem; font-weight:700; }
+    .panel-header .subtitle { font-size:.78rem; color:var(--muted); }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    thead th { background:#f8faf9; padding:.65rem 1rem; text-align:left; font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid var(--border); white-space:nowrap; }
+    tbody tr { border-bottom:1px solid #f0f2f1; transition:background .1s; }
+    tbody tr:hover { background:#f8faf9; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:.8rem 1rem; vertical-align:middle; }
+
+    /* RANKING # */
+    .rank-badge { width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; }
+    .rank-1 { background:#fef3c7; color:#b45309; }
+    .rank-2 { background:#f1f5f9; color:#475569; }
+    .rank-3 { background:#fdf0ee; color:#c0392b; }
+    .rank-n { background:#f0f2f1; color:var(--muted); }
+
+    /* BARRA TASA */
+    .tasa-wrap { display:flex; align-items:center; gap:.6rem; }
+    .tasa-bar { flex:1; max-width:100px; height:6px; background:#e8edeb; border-radius:3px; overflow:hidden; }
+    .tasa-fill { height:100%; border-radius:3px; transition:width .4s; }
+    .tasa-text { font-size:.85rem; font-weight:700; min-width:42px; }
+    .tasa-alta  { color:#0f6e56; }
+    .tasa-media { color:#854f0b; }
+    .tasa-baja  { color:#c0392b; }
+    .fill-alta  { background:#0f6e56; }
+    .fill-media { background:#d97706; }
+    .fill-baja  { background:#c0392b; }
+
+    /* SESGO */
+    .sesgo-pos { color:#c0392b; font-weight:600; }
+    .sesgo-neg { color:#185fa5; font-weight:600; }
+    .sesgo-ok  { color:#0f6e56; font-weight:600; }
+
+    /* ACIERTOS */
+    .aciertos { font-size:.78rem; color:var(--muted); }
+    .aciertos strong { color:var(--text); }
+
+    /* EMPTY / LOADING */
+    .empty { padding:3rem; text-align:center; color:var(--muted); font-size:.85rem; }
+    .loading-row td { text-align:center; padding:2.5rem; color:var(--muted); }
+
+    /* LEYENDA */
+    .legend { display:flex; gap:1.25rem; flex-wrap:wrap; padding:.85rem 1.25rem; border-top:1px solid var(--border); background:#f8faf9; font-size:.75rem; color:var(--muted); }
+    .legend span { display:flex; align-items:center; gap:.35rem; }
+    .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+    /* MOBILE */
+    @media (max-width:768px) {
+      .main { margin-left:0; }
+      .topbar { padding-left:3.5rem; }
+      .content { padding:1rem; }
+      .summary { grid-template-columns:1fr 1fr; }
+      /* ocultar columnas secundarias */
+      thead th:nth-child(5), tbody td:nth-child(5),
+      thead th:nth-child(6), tbody td:nth-child(6) { display:none; }
+    }
+    @media (max-width:420px) {
+      .summary { grid-template-columns:1fr; }
+      thead th:nth-child(4), tbody td:nth-child(4) { display:none; }
+    }
+  </style>
+</head>
+<body>
+<script src="sidebar.js"></script>
+
+<main class="main">
+  <div class="topbar">
+    <h1>Reportes</h1>
+    <span class="date" id="fechaHoy"></span>
+  </div>
+
+  <div class="content">
+
+    <!-- CARDS RESUMEN -->
+    <div class="summary">
+      <div class="sum-card">
+        <span class="sc-label">Usuarios evaluados</span>
+        <span class="sc-value" id="sumUsuarios">—</span>
+        <span class="sc-sub">con proyecciones registradas</span>
+      </div>
+      <div class="sum-card">
+        <span class="sc-label">Total proyecciones</span>
+        <span class="sc-value" id="sumProyecciones">—</span>
+        <span class="sc-sub">en cosechas con peso real</span>
+      </div>
+      <div class="sum-card">
+        <span class="sc-label">Mejor tasa ±10%</span>
+        <span class="sc-value" id="sumMejorTasa">—</span>
+        <span class="sc-sub" id="sumMejorNombre">—</span>
+      </div>
+      <div class="sum-card">
+        <span class="sc-label">Promedio general</span>
+        <span class="sc-value" id="sumPromedio">—</span>
+        <span class="sc-sub">tasa ±10% del equipo</span>
+      </div>
+    </div>
+
+    <!-- TABLA RANKING -->
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Ranking de precisión por usuario</h2>
+          <div class="subtitle">Basado en proyecciones vs peso real de cosecha</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Usuario</th>
+              <th>Tasa ±10%</th>
+              <th>Proyecciones</th>
+              <th>Sesgo</th>
+              <th>Aciertos</th>
+            </tr>
+          </thead>
+          <tbody id="tablaReporte">
+            <tr class="loading-row"><td colspan="6">Cargando reporte...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#0f6e56"></i> Tasa alta ≥ 70%</span>
+        <span><i class="dot" style="background:#d97706"></i> Tasa media 40–69%</span>
+        <span><i class="dot" style="background:#c0392b"></i> Tasa baja &lt; 40%</span>
+        <span style="margin-left:auto">Sesgo (+) sobreestima · Sesgo (−) subestima</span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+
+// Fecha
+const hoy = new Date();
+document.getElementById('fechaHoy').textContent = hoy.toLocaleDateString('es-HN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' };
+}
+
+function tasaClase(t) {
+  if (t >= 70) return { text:'tasa-alta',  fill:'fill-alta'  };
+  if (t >= 40) return { text:'tasa-media', fill:'fill-media' };
+  return             { text:'tasa-baja',   fill:'fill-baja'  };
+}
+
+function sesgoCls(s) {
+  if (Math.abs(s) <= 3) return 'sesgo-ok';
+  return s > 0 ? 'sesgo-pos' : 'sesgo-neg';
+}
+
+function rankCls(r) {
+  if (r === 1) return 'rank-1';
+  if (r === 2) return 'rank-2';
+  if (r === 3) return 'rank-3';
+  return 'rank-n';
+}
+
+async function cargarReporte() {
+  const tbody = document.getElementById('tablaReporte');
+  try {
+    const res  = await fetch(`${API}/reportes/rendimiento`, { headers: authHeader() });
+    const data = await res.json();
+
+    if (!data.success || !data.data.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin datos suficientes aún. Se necesitan cosechas con peso real registrado.</td></tr>';
+      return;
+    }
+
+    const lista = data.data;
+
+    // Cards resumen
+    const totalProy = lista.reduce((s, u) => s + u.total_proyecciones, 0);
+    const mejor     = lista[0];
+    const promedio  = (lista.reduce((s, u) => s + parseFloat(u.tasa_10), 0) / lista.length).toFixed(1);
+
+    document.getElementById('sumUsuarios').textContent     = lista.length;
+    document.getElementById('sumProyecciones').textContent = totalProy;
+    document.getElementById('sumMejorTasa').textContent    = mejor.tasa_10 + '%';
+    document.getElementById('sumMejorNombre').textContent  = mejor.usuario;
+    document.getElementById('sumPromedio').textContent     = promedio + '%';
+
+    // Tabla
+    tbody.innerHTML = lista.map(u => {
+      const tasa   = parseFloat(u.tasa_10);
+      const sesgo  = parseFloat(u.sesgo);
+      const cls    = tasaClase(tasa);
+      const sesgoCl = sesgoCls(sesgo);
+      const sesgStr = (sesgo > 0 ? '+' : '') + sesgo.toFixed(1) + '%';
+
+      return `<tr>
+        <td><span class="rank-badge ${rankCls(u.ranking)}">${u.ranking}</span></td>
+        <td style="font-weight:600">${u.usuario}</td>
+        <td>
+          <div class="tasa-wrap">
+            <div class="tasa-bar"><div class="tasa-fill ${cls.fill}" style="width:${tasa}%"></div></div>
+            <span class="tasa-text ${cls.text}">${tasa}%</span>
+          </div>
+        </td>
+        <td style="color:var(--muted);font-weight:600">${u.total_proyecciones}</td>
+        <td><span class="${sesgoCl}">${sesgStr}</span></td>
+        <td class="aciertos"><strong>${u.aciertos_10}</strong>/${u.total_proyecciones} en ±10%</td>
+      </tr>`;
+    }).join('');
+
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Error al cargar el reporte.</td></tr>';
+  }
+}
+
+cargarReporte();
+</script>
+</body>
+</html>

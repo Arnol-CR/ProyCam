@@ -281,6 +281,14 @@
             Cosechas
           </a>
         ` : ''}
+
+        <a href="reportes.html" class="${paginaActual === 'reportes.html' ? 'active' : ''}" onclick="window.cerrarSidebar()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          Reportes
+        </a>
+
         ${esAdmin ? `
           <div class="nav-label">Administración</div>
           <a href="usuarios.html" class="${paginaActual === 'usuarios.html' ? 'active' : ''}" onclick="window.cerrarSidebar()">
@@ -313,7 +321,6 @@
     </aside>
   `;
 
-  // --- Insertar el sidebar al inicio del body ---
   document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
   // --- Funciones globales ---
@@ -348,12 +355,10 @@
     if (overlay) overlay.classList.remove('show');
   };
 
-  // --- Cerrar sidebar al hacer clic fuera en móvil ---
   document.addEventListener('click', function(e) {
     const sidebar = document.getElementById('mainSidebar');
     const overlay = document.getElementById('sidebarOverlay');
     const isMobile = window.innerWidth <= 768;
-    
     if (isMobile && sidebar && sidebar.classList.contains('open')) {
       if (!sidebar.contains(e.target) && e.target.id !== 'hamburgerBtn') {
         window.cerrarSidebar();
@@ -361,7 +366,6 @@
     }
   });
 
-  // --- Cerrar sidebar al cambiar de tamaño de ventana ---
   window.addEventListener('resize', function() {
     if (window.innerWidth > 768) {
       window.cerrarSidebar();

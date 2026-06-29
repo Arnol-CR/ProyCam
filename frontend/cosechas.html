@@ -177,12 +177,57 @@
     tbody tr.selected { background:#f0f9f5 !important; }
     tbody tr { cursor:pointer; }
 
+    /* ── MOBILE ─────────────────────────────────────── */
+    .hamburger { display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center; }
+    .hamburger svg { width:22px;height:22px; }
+    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:98; }
+
+    @media (max-width:768px) {
+      /* sidebar */
+      .hamburger { display:flex; }
+      .sidebar { transform:translateX(-100%);transition:transform .25s ease;z-index:200; }
+      .main { margin-left:0; }
+      .topbar { padding:0 1rem; }
+      .content { padding:1rem; }
+
+      /* tabla: ocultar #, Fecha, Peso planta, Peso gramos */
+      .table-wrap { overflow-x:auto; }
+      table { min-width:0; width:100%; }
+      thead th:nth-child(1), tbody td:nth-child(1),
+      thead th:nth-child(4), tbody td:nth-child(4),
+      thead th:nth-child(6), tbody td:nth-child(6),
+      thead th:nth-child(7), tbody td:nth-child(7) { display:none; }
+
+      /* modal nueva cosecha: apilar form+preview */
+      .modal-body { grid-template-columns:1fr; }
+      .form-side { border-right:none;border-bottom:1px solid var(--border);padding:1rem; }
+      .preview-side { padding:1rem; }
+      .modal { max-height:92vh;overflow-y:auto; }
+
+      /* panel edicion: full width */
+      .edit-panel { width:100%;right:-100%; }
+      .edit-panel.open { right:0; }
+
+      /* filtros */
+      .filters { flex-direction:column; }
+      .filters select, .filters input { width:100%; }
+
+      /* botón nueva cosecha más pequeño */
+      .btn-primary { font-size:.78rem;padding:.4rem .75rem; }
+    }
+    @media (max-width:420px) {
+      /* Proyectado también se oculta en pantallas muy pequeñas */
+      thead th:nth-child(5), tbody td:nth-child(5) { display:none; }
+    }
+    /* ───────────────────────────────────────────────── */
+
   </style>
 </head>
 <body>
 <script src="sidebar.js"></script>
 
 <div id="sidebar-container"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" style="display:none" onclick="toggleSidebar()"></div>
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
@@ -649,9 +694,11 @@ async function guardarEdicion() {
   }
 }
 
-</script>
+// ── Sidebar móvil ───────────────────────────────────────
 
-<!-- DIM OVERLAY -->
+// ────────────────────────────────────────────────────────
+
+</script>
 <div class="overlay-dim" id="dimOverlay" onclick="cerrarEdicion()"></div>
 
 <!-- PANEL EDICIÓN -->

@@ -31,6 +31,7 @@ app.use('/api/lagunas',     require('./routes/lagunaRoutes'));
 app.use('/api/proyecciones', require('./routes/proyeccionRoutes'));
 app.use('/api/usuarios',    require('./routes/usuarioRoutes'));
 app.use('/api/solicitudes', require('./routes/solicitudRoutes'));
+app.use('/api/reportes',    require('./routes/reportesRoutes'));
 
 app.get('/api/health', async (req, res) => {
   try {
