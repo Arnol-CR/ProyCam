@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cosechas</title>
   <style>
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --brand:#0f6e56; --brand-dark:#085041; --brand-light:#e1f5ee;
@@ -179,13 +180,13 @@
       .filters select, .filters input { width:100%; }
       .btn-primary { font-size:.78rem;padding:.4rem .75rem; }
     }
-
+    .sidebar { visibility:hidden; }
   </style>
 </head>
 <body>
 <script src="sidebar.js"></script>
 
-<!-- MAIN -->
+<div id="sidebar-container"></div>
 <main class="main">
   <div class="topbar">
     <h1>Cosechas</h1>
@@ -736,5 +737,6 @@ async function guardarEdicion() {
 </div>
 
 
+<script src="sidebar.js"></script>
 </body>
 </html>

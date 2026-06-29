@@ -39,7 +39,7 @@
       left: 0;
       height: 100vh;
       z-index: 200;
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
     }
     
     .sidebar-brand {
@@ -322,6 +322,7 @@
   `;
 
   document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
+  document.getElementById('mainSidebar').style.visibility = 'visible';
 
   // Ocultar sidebar en móvil inmediatamente al inyectar
   if (window.innerWidth <= 768) {
@@ -353,7 +354,7 @@
     if (!sb) return;
     _sbOpen = !_sbOpen;
     sb.style.transform  = _sbOpen ? 'translateX(0)' : 'translateX(-100%)';
-    sb.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1)';
+
     sb.style.zIndex     = '200';
     if (ov) ov.style.display = _sbOpen ? 'block' : 'none';
   };
@@ -370,19 +371,8 @@
     const sidebar = document.getElementById('mainSidebar');
     if (window.innerWidth <= 768 && _sbOpen) {
       if (sidebar && !sidebar.contains(e.target) && e.target.id !== 'hamburgerBtn') {
-       // window.cerrarSidebar();
+        window.cerrarSidebar();
       }
-    }
-  });
-
-  window.addEventListener('resize', function() {
-    const sidebar = document.getElementById('mainSidebar');
-    if (!sidebar) return;
-    if (window.innerWidth > 768) {
-      sidebar.style.transform = '';
-      _sbOpen = false;
-    } else if (!_sbOpen) {
-      sidebar.style.transform = 'translateX(-100%)';
     }
   });
 
