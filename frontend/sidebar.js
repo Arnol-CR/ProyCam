@@ -323,6 +323,12 @@
 
   document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
+  // Ocultar sidebar en móvil inmediatamente al inyectar
+  if (window.innerWidth <= 768) {
+    const sb = document.getElementById('mainSidebar');
+    if (sb) sb.style.transform = 'translateX(-100%)';
+  }
+
   // --- Funciones globales ---
   window._usuario = usuario;
   window._esAdmin = esAdmin;
@@ -339,36 +345,44 @@
     window.location.href = 'login.html';
   };
 
+  let _sbOpen = false;
+
   window.toggleSidebar = function() {
-    const sidebar = document.getElementById('mainSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar) {
-      sidebar.classList.toggle('open');
-      if (overlay) overlay.classList.toggle('show');
-    }
+    const sb = document.getElementById('mainSidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    if (!sb) return;
+    _sbOpen = !_sbOpen;
+    sb.style.transform  = _sbOpen ? 'translateX(0)' : 'translateX(-100%)';
+    sb.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1)';
+    sb.style.zIndex     = '200';
+    if (ov) ov.style.display = _sbOpen ? 'block' : 'none';
   };
 
   window.cerrarSidebar = function() {
-    const sidebar = document.getElementById('mainSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar) sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('show');
+    const sb = document.getElementById('mainSidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    _sbOpen = false;
+    if (sb) sb.style.transform = 'translateX(-100%)';
+    if (ov) ov.style.display = 'none';
   };
 
   document.addEventListener('click', function(e) {
     const sidebar = document.getElementById('mainSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile && sidebar && sidebar.classList.contains('open')) {
-      if (!sidebar.contains(e.target) && e.target.id !== 'hamburgerBtn') {
+    if (window.innerWidth <= 768 && _sbOpen) {
+      if (sidebar && !sidebar.contains(e.target) && e.target.id !== 'hamburgerBtn') {
         window.cerrarSidebar();
       }
     }
   });
 
   window.addEventListener('resize', function() {
+    const sidebar = document.getElementById('mainSidebar');
+    if (!sidebar) return;
     if (window.innerWidth > 768) {
-      window.cerrarSidebar();
+      sidebar.style.transform = '';
+      _sbOpen = false;
+    } else if (!_sbOpen) {
+      sidebar.style.transform = 'translateX(-100%)';
     }
   });
 

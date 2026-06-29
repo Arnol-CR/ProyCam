@@ -18,28 +18,33 @@
     @media (max-width:768px) {
       .main { margin-left:0 !important; }
       .topbar { padding-left:3.5rem !important; }
-      .content { padding:1rem; }
+      .content { padding:.75rem; }
       .stats { grid-template-columns:1fr 1fr;gap:.75rem; }
       .stat-card { padding:1rem; }
       .stat-info .value { font-size:1.3rem; }
-      .panel { overflow-x:auto; }
-      table { min-width:580px; }
+      /* Tabla dashboard: sin scroll, ocultar columnas */
+      .panel { overflow:hidden; }
+      table { min-width:0; width:100%; }
+      thead th:nth-child(3), tbody td:nth-child(3),
       thead th:nth-child(4), tbody td:nth-child(4),
       thead th:nth-child(5), tbody td:nth-child(5) { display:none; }
+      /* Botones más compactos */
+      .btn-ver, .btn-proyectar { padding:.3rem .5rem;font-size:.72rem;min-width:unset;width:100%; }
+      /* Modal */
+      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
+      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
+      .factores-grid { grid-template-columns:1fr 1fr!important; }
+      .proy-table { min-width:0;width:100%; }
+      .proy-table-wrap { overflow-x:auto; }
+      /* Ocultar ROL en tabla proyecciones modal */
       .proy-table thead th:nth-child(3), .proy-table tbody td:nth-child(3),
       .proy-table thead th:nth-child(6), .proy-table tbody td:nth-child(6) { display:none; }
       .proy-table thead th:nth-child(4), .proy-table tbody td:nth-child(4),
       .proy-table thead th:nth-child(5), .proy-table tbody td:nth-child(5),
       .proy-table thead th:nth-child(7), .proy-table tbody td:nth-child(7) { display:table-cell; }
-      .btn-ver, .btn-proyectar { padding:.3rem .5rem;font-size:.72rem;min-width:unset; }
-      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
-      .resumen-box[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns:1fr 1fr!important; }
-      .factores-grid { grid-template-columns:1fr 1fr!important; }
-      .proy-table { min-width:480px; }
-      .proy-table-wrap { overflow-x:auto; }
     }
     @media (max-width:420px) {
-      .stats { grid-template-columns:1fr; }
+      .stats { grid-template-columns:1fr 1fr; }
     }
     .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
     .topbar h1 { font-size:1rem;font-weight:600; }
@@ -500,7 +505,7 @@ return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
   }
 }
 
-// Override sidebar móvil con estilos directos (más confiable que clases CSS)
+// Override sidebar móvil
 let _sbOpen = false;
 window.toggleSidebar = function() {
   const sb = document.querySelector('.sidebar');

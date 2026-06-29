@@ -14,29 +14,6 @@
     }
     body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
 
-    /* SIDEBAR */
-    .sidebar { width:var(--sidebar-w); background:var(--brand-dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; }
-    .sidebar-brand { padding:1.4rem 1.2rem 1rem; border-bottom:1px solid rgba(255,255,255,.1); }
-    .sidebar-brand .icon { width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem; }
-    .sidebar-brand .icon svg { width:20px;height:20px;fill:#fff; }
-    .sidebar-brand h2 { color:#fff;font-size:.95rem;font-weight:700; }
-    .sidebar-brand p  { color:rgba(255,255,255,.5);font-size:.72rem;margin-top:.1rem; }
-    .nav { flex:1;padding:.75rem 0;overflow-y:auto; }
-    .nav-label { color:rgba(255,255,255,.35);font-size:.67rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.9rem 1.2rem .3rem; }
-    .nav a { display:flex;align-items:center;gap:.65rem;padding:.55rem 1.2rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:background .15s,color .15s; }
-    .nav a:hover { background:rgba(255,255,255,.07);color:#fff; }
-    .nav a.active { background:rgba(255,255,255,.12);color:#fff;border-left-color:#5DCAA5; }
-    .nav a svg { width:18px;height:18px;flex-shrink:0; }
-    .sidebar-footer { padding:.9rem 1.2rem;border-top:1px solid rgba(255,255,255,.1); }
-    .user-info { display:flex;align-items:center;gap:.6rem; }
-    .avatar { width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;font-weight:700;flex-shrink:0; }
-    .user-info .info { flex:1;min-width:0; }
-    .user-info .name { color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .user-info .role { color:rgba(255,255,255,.45);font-size:.7rem; }
-    .btn-logout { background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);padding:4px;display:flex;align-items:center; }
-    .btn-logout:hover { color:#fff; }
-    .btn-logout svg { width:16px;height:16px; }
-
     /* MAIN */
     .main { margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column; }
     .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.75rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
@@ -177,57 +154,37 @@
     tbody tr.selected { background:#f0f9f5 !important; }
     tbody tr { cursor:pointer; }
 
-    /* ── MOBILE ─────────────────────────────────────── */
-    .hamburger { display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text);align-items:center;justify-content:center; }
-    .hamburger svg { width:22px;height:22px; }
-    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:98; }
-
     @media (max-width:768px) {
-      /* sidebar */
-      .hamburger { display:flex; }
-      .sidebar { transform:translateX(-100%);transition:transform .25s ease;z-index:200; }
-      .main { margin-left:0; }
-      .topbar { padding:0 1rem; }
-      .content { padding:1rem; }
-
-      /* tabla: ocultar #, Fecha, Peso planta, Peso gramos */
-      .table-wrap { overflow-x:auto; }
+      .main { margin-left:0 !important; }
+      .topbar { padding-left:3.5rem !important; }
+      .content { padding:.75rem; }
+      /* tabla: ocultar #, Sector, Fecha, Peso planta, Peso gramos */
+      .table-wrap { overflow-x:hidden; }
       table { min-width:0; width:100%; }
       thead th:nth-child(1), tbody td:nth-child(1),
+      thead th:nth-child(3), tbody td:nth-child(3),
       thead th:nth-child(4), tbody td:nth-child(4),
       thead th:nth-child(6), tbody td:nth-child(6),
       thead th:nth-child(7), tbody td:nth-child(7) { display:none; }
-
-      /* modal nueva cosecha: apilar form+preview */
+      /* modal nueva cosecha: apilar */
       .modal-body { grid-template-columns:1fr; }
       .form-side { border-right:none;border-bottom:1px solid var(--border);padding:1rem; }
       .preview-side { padding:1rem; }
       .modal { max-height:92vh;overflow-y:auto; }
-
       /* panel edicion: full width */
       .edit-panel { width:100%;right:-100%; }
       .edit-panel.open { right:0; }
-
       /* filtros */
       .filters { flex-direction:column; }
       .filters select, .filters input { width:100%; }
-
-      /* botón nueva cosecha más pequeño */
       .btn-primary { font-size:.78rem;padding:.4rem .75rem; }
     }
-    @media (max-width:420px) {
-      /* Proyectado también se oculta en pantallas muy pequeñas */
-      thead th:nth-child(5), tbody td:nth-child(5) { display:none; }
-    }
-    /* ───────────────────────────────────────────────── */
 
   </style>
 </head>
 <body>
 <script src="sidebar.js"></script>
 
-<div id="sidebar-container"></div>
-<div class="sidebar-overlay" id="sidebarOverlay" style="display:none" onclick="toggleSidebar()"></div>
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
@@ -694,10 +651,6 @@ async function guardarEdicion() {
   }
 }
 
-// ── Sidebar móvil ───────────────────────────────────────
-
-// ────────────────────────────────────────────────────────
-
 </script>
 <div class="overlay-dim" id="dimOverlay" onclick="cerrarEdicion()"></div>
 
@@ -782,6 +735,6 @@ async function guardarEdicion() {
   </div>
 </div>
 
-<script src="sidebar.js"></script>
+
 </body>
 </html>
