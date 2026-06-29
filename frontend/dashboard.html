@@ -500,6 +500,26 @@ return `<tr style="${esMasCercano ? 'background:#f0f9f5;' : ''}">
   }
 }
 
+// Override sidebar móvil con estilos directos (más confiable que clases CSS)
+let _sbOpen = false;
+window.toggleSidebar = function() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  if (!sb) return;
+  _sbOpen = !_sbOpen;
+  sb.style.transform  = _sbOpen ? 'translateX(0)' : 'translateX(-100%)';
+  sb.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1)';
+  sb.style.zIndex     = '200';
+  if (ov) ov.style.display = _sbOpen ? 'block' : 'none';
+};
+window.cerrarSidebar = function() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  if (sb) sb.style.transform = 'translateX(-100%)';
+  if (ov) ov.style.display = 'none';
+  _sbOpen = false;
+};
+
 cargarStats();
 cargarCosechasActivas();
 </script>
