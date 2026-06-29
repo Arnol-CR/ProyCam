@@ -370,7 +370,7 @@
     const sidebar = document.getElementById('mainSidebar');
     if (window.innerWidth <= 768 && _sbOpen) {
       if (sidebar && !sidebar.contains(e.target) && e.target.id !== 'hamburgerBtn') {
-        window.cerrarSidebar();
+       // window.cerrarSidebar();
       }
     }
   });
